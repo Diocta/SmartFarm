@@ -1,24 +1,49 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+// app/_layout.tsx
+import { Drawer } from "expo-router/drawer";
+import { Stack } from "expo-router";
+import { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { View, ActivityIndicator } from "react-native";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+export default function Layout() {
+  const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+  useEffect(() => {
+    const checkLogin = async () => {
+      const token = await AsyncStorage.getItem("token");
+      setIsLoggedIn(!!token);
+      setLoading(false);
+    };
+    checkLogin();
+  }, []);
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+  if (!isLoggedIn) {
+    // Kalau belum login → hanya tampilkan stack auth
+    return (
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="auth/login" />
+        <Stack.Screen name="auth/register" />
       </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    );
+  }
+
+  // Kalau sudah login → tampilkan drawer
+  return (
+    <Drawer>
+      <Drawer.Screen name="index" options={{ title: "Home" }} />
+      <Drawer.Screen name="explore" options={{ title: "Explore" }} />
+      <Drawer.Screen name="screens/profile" options={{ title: "Profile" }} />
+      <Drawer.Screen name="screens/data" options={{ title: "Data" }} />
+      <Drawer.Screen name="screens/news" options={{ title: "News" }} />
+    </Drawer>
   );
 }

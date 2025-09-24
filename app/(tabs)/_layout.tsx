@@ -1,35 +1,54 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Drawer } from "expo-router/drawer";
+import React from "react";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import Feather from '@expo/vector-icons/Feather';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+export default function Layout() {
   return (
-    <Tabs
+    <Drawer
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
+        headerShown: true,
+      }}
+    >
+      <Drawer.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: "Home",
+          drawerIcon: ({ color, size }) => (
+            <Feather name="home" size={24} color={color} />
+          ),
         }}
       />
-      <Tabs.Screen
-        name="explore"
+      <Drawer.Screen
+        name="data"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: "IoT Dashboard",
+          drawerIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="monitor-dashboard" size={24} color={color} />
+          ),
         }}
       />
-    </Tabs>
+      <Drawer.Screen
+        name="news"
+        options={{
+          title: "News",
+          drawerIcon: ({ color, size }) => (
+            <FontAwesome name="newspaper-o" size={24} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          drawerIcon: ({ color, size }) => (
+            <Feather name="user" size={24} color={color} />
+          ),
+        }}
+      />
+    </Drawer>
   );
 }
