@@ -8,7 +8,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   title: {
-    fontSize: 28,
+    fontSize: 40,
     fontWeight: "bold",
     color: "#12372A",
     marginBottom: 5,
@@ -20,18 +20,25 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
   },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 12,
+  inputWrapper: {
     marginBottom: 15,
-    borderRadius: 8,
-    backgroundColor: "#f5f5f5",
+  },
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#DAF1DE",
+    borderRadius: 15,
+    paddingHorizontal: 10,
+  },
+  input: {
+    flex: 1,
+    padding: 12,
+    marginLeft: 8,
   },
   button: {
     backgroundColor: "#12372A",
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 30,
     alignItems: "center",
     marginBottom: 15,
   },

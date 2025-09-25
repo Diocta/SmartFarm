@@ -27,9 +27,10 @@ export default function Layout() {
   }
 
   if (!isLoggedIn) {
-    // Kalau belum login → hanya tampilkan stack auth
+    // Kalau belum login → tampilkan welcome + auth
     return (
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="auth/welcome" />
         <Stack.Screen name="auth/login" />
         <Stack.Screen name="auth/register" />
       </Stack>

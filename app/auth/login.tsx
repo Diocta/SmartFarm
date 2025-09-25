@@ -1,7 +1,8 @@
 import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Svg, { Path } from "react-native-svg"; // ✅ untuk lekukan
 import styles from "../../assets/styles/loginStyle";
 
@@ -50,12 +51,7 @@ export default function Login() {
 
       {/* EMAIL INPUT */}
       <View style={styles.inputWrapper}>
-        <Ionicons
-          name="person-outline"
-          size={20}
-          color="#12372A"
-          style={styles.icon}
-        />
+        <MaterialIcons name="email" size={24} color="black" />
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -67,12 +63,7 @@ export default function Login() {
 
       {/* PASSWORD INPUT */}
       <View style={styles.inputWrapper}>
-        <Ionicons
-          name="lock-closed-outline"
-          size={20}
-          color="#12372A"
-          style={styles.icon}
-        />
+        <FontAwesome name="lock" size={24} color="black" />
         <TextInput
           style={styles.input}
           placeholder="Password"
@@ -98,7 +89,7 @@ export default function Login() {
       <Text style={styles.footer}>
         Don’t have an account?{" "}
         <Text style={styles.link} onPress={() => router.push("/auth/register")}>
-          Sign Up
+          Register
         </Text>
       </Text>
     </View>
