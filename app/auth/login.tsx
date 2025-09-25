@@ -1,7 +1,8 @@
 import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons"; 
+import { Ionicons } from "@expo/vector-icons";
+import Svg, { Path } from "react-native-svg"; // ✅ untuk lekukan
 import styles from "../../assets/styles/loginStyle";
 
 export default function Login() {
@@ -17,13 +18,31 @@ export default function Login() {
 
   return (
     <View style={styles.container}>
-      {/* HEADER IMAGE */}
+      {/* HEADER dengan gambar + lekukan */}
       <View style={styles.headerContainer}>
         <Image
           source={require("../../assets/images/headerlogin.png")}
           style={styles.headerImage}
           resizeMode="cover"
         />
+        {/* Lekukan putih */}
+        <Svg
+          height="100"
+          width="100%"
+          viewBox="0 0 720 120"
+          style={styles.waveSvg}
+          preserveAspectRatio="none"
+        >
+          <Path
+            d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,
+               82.39-16.72,168.19-17.73,250.45-.39C823.78,31,
+               906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,
+               214.34,3V0H0V27.35A600.21,600.21,0,
+               0,0,321.39,56.44Z"
+            fill="#fff"
+            transform="scale(1, -1) translate(0, -120)"
+          />
+        </Svg>
       </View>
 
       <Text style={styles.title}>Welcome</Text>
@@ -31,7 +50,12 @@ export default function Login() {
 
       {/* EMAIL INPUT */}
       <View style={styles.inputWrapper}>
-        <Ionicons name="person-outline" size={20} color="#12372A" style={styles.icon} />
+        <Ionicons
+          name="person-outline"
+          size={20}
+          color="#12372A"
+          style={styles.icon}
+        />
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -43,7 +67,12 @@ export default function Login() {
 
       {/* PASSWORD INPUT */}
       <View style={styles.inputWrapper}>
-        <Ionicons name="lock-closed-outline" size={20} color="#12372A" style={styles.icon} />
+        <Ionicons
+          name="lock-closed-outline"
+          size={20}
+          color="#12372A"
+          style={styles.icon}
+        />
         <TextInput
           style={styles.input}
           placeholder="Password"
