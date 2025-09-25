@@ -1,22 +1,24 @@
-import { View, Text, TextInput, Button, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
+import styles from "../styles/loginStyle";
 
 export default function Login() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
 
   const handleLogin = () => {
-    // TODO: tambahkan logic login (cek ke server / firebase)
     if (email && password) {
-      router.replace("/(tabs)"); // masuk ke home setelah login
+      router.replace("/(tabs)");
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <Text style={styles.title}>Welcome</Text>
+      <Text style={styles.subtitle}>Login to your account</Text>
+
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -30,14 +32,22 @@ export default function Login() {
         value={password}
         onChangeText={setPassword}
       />
-      <Button title="Login" onPress={handleLogin} />
-      <Button title="Belum punya akun? Register" onPress={() => router.push("/auth/register")} />
+
+      <View style={styles.row}>
+        <Text style={styles.link}>Remember Me</Text>
+        <Text style={styles.link}>Forgot Password?</Text>
+      </View>
+
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Login</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.footer}>
+        Don’t have an account?{" "}
+        <Text style={styles.link} onPress={() => router.push("/auth/register")}>
+          Sign Up
+        </Text>
+      </Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20 },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
-  input: { borderWidth: 1, borderColor: "#ccc", padding: 10, marginBottom: 10, borderRadius: 5 },
-});

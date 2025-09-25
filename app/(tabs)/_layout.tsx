@@ -4,6 +4,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Feather from '@expo/vector-icons/Feather';
+import AntDesign from '@expo/vector-icons/AntDesign';
 
 
 export default function Layout() {
@@ -25,9 +26,9 @@ export default function Layout() {
       <Drawer.Screen
         name="data"
         options={{
-          title: "IoT Dashboard",
+          title: "Data Chart",
           drawerIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="monitor-dashboard" size={24} color={color} />
+            <AntDesign name="bar-chart" size={24} color={color} />
           ),
         }}
       />
