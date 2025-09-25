@@ -1,7 +1,7 @@
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
-import styles from "../styles/registerStyle";
+import styles from "../../assets/styles/registerStyle";
 
 export default function Register() {
   const router = useRouter();
