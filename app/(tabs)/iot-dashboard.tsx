@@ -36,7 +36,6 @@ const IoTDashboard: React.FC = () => {
     });
 
     setClient(mqttClient);
-
     return () => {
       mqttClient.end();
     };
@@ -65,18 +64,24 @@ const IoTDashboard: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>🌱 Smart Hydroponic Dashboard</Text>
+      <Text style={styles.title}>🌱 Smart Hydroponic</Text>
 
-      {/* Sensor Data Card */}
-      <View style={styles.card}>
+      {/* Sensor Data */}
+      <View style={styles.cardHighlight}>
         <Text style={styles.cardTitle}>📊 Sensor Data</Text>
-        <Text style={styles.dataText}>pH: {ph}</Text>
-        <Text style={styles.dataText}>PPM: {ppm}</Text>
-        <Text style={styles.dataText}>Pompa PPM: {pumpPpm}</Text>
-        <Text style={styles.dataText}>Pompa pH Down: {pumpPh}</Text>
+        <View style={styles.sensorRow}>
+          <View style={styles.sensorBox}>
+            <Text style={styles.sensorValue}>{ph.toFixed(2)}</Text>
+            <Text style={styles.sensorLabel}>pH</Text>
+          </View>
+          <View style={styles.sensorBox}>
+            <Text style={styles.sensorValue}>{ppm.toFixed(0)}</Text>
+            <Text style={styles.sensorLabel}>PPM</Text>
+          </View>
+        </View>
       </View>
 
-      {/* Mode Selection */}
+      {/* Mode */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>⚙️ Mode</Text>
         <View style={styles.row}>
@@ -102,47 +107,53 @@ const IoTDashboard: React.FC = () => {
             </Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.dataText}>
+        <Text style={styles.currentMode}>
           Mode sekarang: <Text style={{ fontWeight: "bold" }}>{mode}</Text>
         </Text>
       </View>
 
-      {/* Manual Control */}
-      {mode === "manual" ? (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>🕹️ Kontrol Manual</Text>
-          <TouchableOpacity
-            style={[
-              styles.controlButton,
-              pumpPpm === "ON" ? styles.stopButton : styles.startButton,
-            ]}
-            onPress={togglePumpPpm}
-          >
-            <Text style={styles.controlText}>
-              {pumpPpm === "ON" ? "Matikan Pompa PPM" : "Nyalakan Pompa PPM"}
-            </Text>
-          </TouchableOpacity>
+      {/* Kontrol */}
+      <View style={styles.card}>
+        {mode === "manual" ? (
+          <>
+            <Text style={styles.cardTitle}>🕹️ Kontrol Manual</Text>
+            <TouchableOpacity
+              style={[
+                styles.controlButton,
+                pumpPpm === "ON" ? styles.stopButton : styles.startButton,
+              ]}
+              onPress={togglePumpPpm}
+            >
+              <Text style={styles.controlText}>
+                {pumpPpm === "ON"
+                  ? "Matikan Pompa PPM"
+                  : "Nyalakan Pompa PPM"}
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[
-              styles.controlButton,
-              pumpPh === "ON" ? styles.stopButton : styles.startButton,
-            ]}
-            onPress={togglePumpPh}
-          >
-            <Text style={styles.controlText}>
-              {pumpPh === "ON" ? "Matikan Pompa pH" : "Nyalakan Pompa pH"}
+            <TouchableOpacity
+              style={[
+                styles.controlButton,
+                pumpPh === "ON" ? styles.stopButton : styles.startButton,
+              ]}
+              onPress={togglePumpPh}
+            >
+              <Text style={styles.controlText}>
+                {pumpPh === "ON"
+                  ? "Matikan Pompa pH"
+                  : "Nyalakan Pompa pH"}
+              </Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <Text style={styles.cardTitle}>🤖 Mode Otomatis</Text>
+            <Text style={styles.autoText}>
+              Kontrol pH & PPM dilakukan otomatis oleh ESP32.
             </Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>🤖 Mode Otomatis</Text>
-          <Text style={styles.dataText}>
-            Kontrol pH & PPM dilakukan otomatis oleh ESP32.
-          </Text>
-        </View>
-      )}
+          </>
+        )}
+      </View>
     </ScrollView>
   );
 };

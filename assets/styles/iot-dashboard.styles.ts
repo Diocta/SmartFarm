@@ -3,77 +3,119 @@ import { StyleSheet } from "react-native";
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f6fdf9",
-    padding: 16,
+    backgroundColor: "#f3f4f6",
+    padding: 20,
   },
+
   title: {
     fontSize: 24,
     fontWeight: "700",
-    marginBottom: 16,
+    marginBottom: 20,
     textAlign: "center",
-    color: "#1a4731",
+    color: "#1d4ed8",
   },
+
+  // Card default
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: "#ffffff",
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 18,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  cardHighlight: {
+    backgroundColor: "#2563eb",
+    borderRadius: 24,
+    padding: 24,
     marginBottom: 20,
     shadowColor: "#000",
     shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 10,
     elevation: 4,
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "600",
-    marginBottom: 10,
-    color: "#1a4731",
+    marginBottom: 16,
+    color: "#1e293b",
   },
-  dataText: {
-    fontSize: 16,
-    marginBottom: 6,
-    color: "#333",
-  },
-  row: {
+
+  // Sensor card
+  sensorRow: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginVertical: 10,
+  },
+  sensorBox: {
+    alignItems: "center",
+  },
+  sensorValue: {
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  sensorLabel: {
+    fontSize: 15,
+    color: "#e0f2fe",
+    marginTop: 4,
+  },
+
+  // Mode
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    marginVertical: 12,
   },
   modeButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#1a4731",
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#2563eb",
     backgroundColor: "#fff",
   },
   activeButton: {
-    backgroundColor: "#1a4731",
+    backgroundColor: "#2563eb",
   },
   buttonText: {
     fontSize: 16,
-    color: "#1a4731",
-    fontWeight: "500",
+    fontWeight: "600",
+    color: "#2563eb",
   },
   activeText: {
     color: "#fff",
   },
+  currentMode: {
+    textAlign: "center",
+    marginTop: 8,
+    fontSize: 15,
+    color: "#475569",
+  },
+
+  // Kontrol
   controlButton: {
-    paddingVertical: 14,
-    borderRadius: 12,
-    marginTop: 12,
+    paddingVertical: 16,
+    borderRadius: 14,
+    marginTop: 14,
     alignItems: "center",
   },
   startButton: {
-    backgroundColor: "#28a745",
+    backgroundColor: "#22c55e",
   },
   stopButton: {
-    backgroundColor: "#dc3545",
+    backgroundColor: "#ef4444",
   },
   controlText: {
     fontSize: 16,
-    color: "#fff",
     fontWeight: "600",
+    color: "#fff",
+  },
+  autoText: {
+    fontSize: 15,
+    color: "#475569",
   },
 });
