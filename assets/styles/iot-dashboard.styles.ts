@@ -12,7 +12,7 @@ export const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 20,
     textAlign: "center",
-    color: "#1d4ed8",
+    color: "#163832",
   },
 
   // Card default
@@ -28,7 +28,7 @@ export const styles = StyleSheet.create({
     elevation: 3,
   },
   cardHighlight: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#8eb69b",
     borderRadius: 24,
     padding: 24,
     marginBottom: 20,
@@ -75,16 +75,16 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 30,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: "#2563eb",
+    borderColor: "#8eb69b",
     backgroundColor: "#fff",
   },
   activeButton: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#8eb69b",
   },
   buttonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#2563eb",
+    color: "#8eb69b",
   },
   activeText: {
     color: "#fff",
@@ -104,7 +104,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
   },
   startButton: {
-    backgroundColor: "#22c55e",
+    backgroundColor: "#8eb69b",
   },
   stopButton: {
     backgroundColor: "#ef4444",
@@ -116,6 +116,6 @@ export const styles = StyleSheet.create({
   },
   autoText: {
     fontSize: 15,
-    color: "#475569",
+    color: "#8eb69b",
   },
 });
