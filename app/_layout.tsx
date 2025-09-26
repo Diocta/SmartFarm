@@ -4,10 +4,13 @@ import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, ActivityIndicator } from "react-native";
+import AnimatedSplash from "@/components/AnimatedSplash";
 
 export default function Layout() {
+  const [isSplashDone, setIsSplashDone] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
 
   useEffect(() => {
     const checkLogin = async () => {
@@ -18,6 +21,10 @@ export default function Layout() {
     checkLogin();
   }, []);
 
+  if (!isSplashDone) {
+    return <AnimatedSplash onFinish={() => setIsSplashDone(true)} />;
+  }
+
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -27,9 +34,10 @@ export default function Layout() {
   }
 
   if (!isLoggedIn) {
-    // Kalau belum login → hanya tampilkan stack auth
+    // Kalau belum login → tampilkan welcome + auth
     return (
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="auth/welcome" />
         <Stack.Screen name="auth/login" />
         <Stack.Screen name="auth/register" />
       </Stack>
