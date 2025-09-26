@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { Text, View, TouchableOpacity, ScrollView } from "react-native";
-import "react-native-get-random-values";
 import { Buffer } from "buffer";
-import process from "process";
 import mqtt, { MqttClient } from "mqtt";
+import process from "process";
+import React, { useEffect, useState } from "react";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import "react-native-get-random-values";
+// @ts-ignore
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { styles } from "../../assets/styles/iot-dashboard.styles";
 
 (global as any).Buffer = Buffer;
@@ -36,7 +38,8 @@ const IoTDashboard: React.FC = () => {
     });
 
     setClient(mqttClient);
-    return () => {
+
+    return (): void => {
       mqttClient.end();
     };
   }, []);
@@ -52,6 +55,7 @@ const IoTDashboard: React.FC = () => {
     if (client && mode === "manual") {
       const newStatus = pumpPpm === "ON" ? "OFF" : "ON";
       client.publish("hydroponic/control/pump_ppm", newStatus);
+      setPumpPpm(newStatus);
     }
   };
 
@@ -59,22 +63,42 @@ const IoTDashboard: React.FC = () => {
     if (client && mode === "manual") {
       const newStatus = pumpPh === "ON" ? "OFF" : "ON";
       client.publish("hydroponic/control/pump_ph", newStatus);
+      setPumpPh(newStatus);
     }
   };
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>🌱 Smart Hydroponic</Text>
+      <Text style={styles.title}>🌱 Lettura IoT Dashboard</Text>
 
-      {/* Sensor Data */}
+      {/* Data pH */}
       <View style={styles.cardHighlight}>
-        <Text style={styles.cardTitle}>📊 Sensor Data</Text>
+        <Text style={styles.cardTitle}>pH Value</Text>
         <View style={styles.sensorRow}>
           <View style={styles.sensorBox}>
+            <Icon
+              name="water-pH"
+              size={24}
+              color="#daf1de"
+              style={{ marginRight: 8 }}
+            />
             <Text style={styles.sensorValue}>{ph.toFixed(2)}</Text>
             <Text style={styles.sensorLabel}>pH</Text>
           </View>
+        </View>
+      </View>
+
+      {/* Data PPM */}
+      <View style={styles.cardHighlight}>
+        <Text style={styles.cardTitle}>PPM Value</Text>
+        <View style={styles.sensorRow}>
           <View style={styles.sensorBox}>
+            <Icon
+              name="gauge"
+              size={24}
+              color="#daf1de"
+              style={{ marginRight: 8 }}
+            />
             <Text style={styles.sensorValue}>{ppm.toFixed(0)}</Text>
             <Text style={styles.sensorLabel}>PPM</Text>
           </View>
@@ -89,9 +113,7 @@ const IoTDashboard: React.FC = () => {
             style={[styles.modeButton, mode === "manual" && styles.activeButton]}
             onPress={() => changeMode("manual")}
           >
-            <Text
-              style={[styles.buttonText, mode === "manual" && styles.activeText]}
-            >
+            <Text style={[styles.buttonText, mode === "manual" && styles.activeText]}>
               Manual
             </Text>
           </TouchableOpacity>
@@ -100,9 +122,7 @@ const IoTDashboard: React.FC = () => {
             style={[styles.modeButton, mode === "auto" && styles.activeButton]}
             onPress={() => changeMode("auto")}
           >
-            <Text
-              style={[styles.buttonText, mode === "auto" && styles.activeText]}
-            >
+            <Text style={[styles.buttonText, mode === "auto" && styles.activeText]}>
               Auto
             </Text>
           </TouchableOpacity>
@@ -118,30 +138,20 @@ const IoTDashboard: React.FC = () => {
           <>
             <Text style={styles.cardTitle}>🕹️ Kontrol Manual</Text>
             <TouchableOpacity
-              style={[
-                styles.controlButton,
-                pumpPpm === "ON" ? styles.stopButton : styles.startButton,
-              ]}
+              style={[styles.controlButton, pumpPpm === "ON" ? styles.stopButton : styles.startButton]}
               onPress={togglePumpPpm}
             >
               <Text style={styles.controlText}>
-                {pumpPpm === "ON"
-                  ? "Matikan Pompa PPM"
-                  : "Nyalakan Pompa PPM"}
+                {pumpPpm === "ON" ? "Matikan Pompa PPM" : "Nyalakan Pompa PPM"}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[
-                styles.controlButton,
-                pumpPh === "ON" ? styles.stopButton : styles.startButton,
-              ]}
+              style={[styles.controlButton, pumpPh === "ON" ? styles.stopButton : styles.startButton]}
               onPress={togglePumpPh}
             >
               <Text style={styles.controlText}>
-                {pumpPh === "ON"
-                  ? "Matikan Pompa pH"
-                  : "Nyalakan Pompa pH"}
+                {pumpPh === "ON" ? "Matikan Pompa pH" : "Nyalakan Pompa pH"}
               </Text>
             </TouchableOpacity>
           </>
