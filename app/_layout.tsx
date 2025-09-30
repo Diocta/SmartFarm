@@ -47,7 +47,7 @@ export default function Layout() {
   // Kalau sudah login → tampilkan drawer
   return (
     <Drawer>
-      <Drawer.Screen name="index" options={{ title: "Home" }} />
+      <Drawer.Screen name="index" options={{ title: "Beranda" }} />
       <Drawer.Screen name="explore" options={{ title: "Explore" }} />
       <Drawer.Screen name="screens/profile" options={{ title: "Profile" }} />
       <Drawer.Screen name="screens/data" options={{ title: "Data" }} />
