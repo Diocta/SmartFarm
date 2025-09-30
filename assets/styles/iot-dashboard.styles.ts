@@ -38,7 +38,6 @@ export const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 4,
   },
-
   cardTitle: {
     fontSize: 16,
     fontWeight: "600",
@@ -78,6 +77,126 @@ export const styles = StyleSheet.create({
   },
   modeSwitchLabelActive: {
     color: "#8eb69b",
+  },
+
+  // --- Camera Styles ---
+  cameraContainer: {
+    width: "100%",
+    height: 280,
+    backgroundColor: "#1a1a1a",
+    borderRadius: 16,
+    overflow: "hidden",
+    marginTop: 8,
+    position: "relative",
+    borderWidth: 2,
+    borderColor: "#e2e8f0",
+  },
+  cameraImage: {
+    width: "100%",
+    height: "100%",
+  },
+  noImagePlaceholder: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8fafc",
+    paddingHorizontal: 20,
+  },
+  noImageText: {
+    color: "#64748b",
+    fontSize: 16,
+    fontWeight: "600",
+    marginTop: 12,
+  },
+  noImageSubtext: {
+    color: "#94a3b8",
+    fontSize: 12,
+    marginTop: 4,
+    textAlign: "center",
+  },
+  loadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.75)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  loadingText: {
+    color: "#fff",
+    marginTop: 12,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+
+  cameraButtonsRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  captureButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#8eb69b",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10,
+    gap: 5,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  streamButton: {
+    backgroundColor: "#ef4444",
+  },
+  streamButtonActive: {
+    backgroundColor: "#dc2626",
+  },
+  captureButtonText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  disabledButton: {
+    backgroundColor: "#cbd5e1",
+    opacity: 0.6,
+  },
+
+  cameraInfo: {
+    marginTop: 10,
+    alignItems: "center",
+  },
+  streamingBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#dc2626",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 6,
+  },
+  streamingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#fff",
+  },
+  streamingText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  imageTimestamp: {
+    color: "#64748b",
+    fontSize: 12,
+    fontStyle: "italic",
+    marginTop: 10,
+    textAlign: "center",
   },
 
   // --- Sensor Cards ---
@@ -157,13 +276,11 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 6,
   },
-
   pumpIconWrapper: {
-  position: "relative",
-  alignItems: "center",
-  justifyContent: "center",
-},
-
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   pumpStatusContainer: {
     alignItems: "center",
     justifyContent: "center",
