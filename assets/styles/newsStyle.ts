@@ -3,13 +3,13 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#daf1de",
+    backgroundColor: "#f8f9fa",
   },
   header: {
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 10,
-    backgroundColor: "#daf1de",
+    backgroundColor: "#f8f9fa",
     borderBottomWidth: 1,
     borderBottomColor: "#8EB69B50",
   },
@@ -25,7 +25,7 @@ export const styles = StyleSheet.create({
     opacity: 0.5,
   },
   categoriesSection: {
-    backgroundColor: "#daf1de",
+    backgroundColor: "#f8f9fa",
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#8EB69B50",
@@ -37,7 +37,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: "#8eb69b",
+    backgroundColor: "#daf1de",
     opacity: 0.5,
     marginRight: 8,
   },
@@ -51,14 +51,14 @@ export const styles = StyleSheet.create({
     fontWeight: "500",
   },
   chipTextSelected: {
-    color: "#DAF1DE",
+    color: "#fff",
   },
   listContainer: {
     padding: 15,
     paddingBottom: 30,
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: "#daf1de",
     borderRadius: 16,
     marginBottom: 16,
     shadowColor: "#000",

@@ -5,140 +5,40 @@ import {
   FlatList, 
   Image, 
   TouchableOpacity, 
-  StyleSheet, 
   SafeAreaView,
   StatusBar,
   RefreshControl,
   Animated,
   Dimensions,
   ScrollView,
-  TextInput,
-  SectionList
+  TextInput
 } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 
+import { 
+  banners, 
+  leaderboardData,
+  newsData,
+  categories,
+  NewsItem, 
+  Banner, 
+  LeaderboardItem 
+} from "@/assets/prop/indexData";
+import { styles } from "@/assets/styles/indexStyle";
+import { Link } from "expo-router";
 const { width } = Dimensions.get('window');
-
-// Define types
-type NewsItem = {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  category: string;
-  date: string;
-  readTime: string;
-  isTrending?: boolean;
-  isFeatured?: boolean;
-};
-
-type Banner = {
-  id: string;
-  title: string;
-  image: string;
-  category: string;
-};
-
-const banners: Banner[] = [
-  {
-    id: "1",
-    title: "Teknologi Terbaru 2024",
-    image: "https://picsum.photos/400/200?random=10",
-    category: "Teknologi"
-  },
-  {
-    id: "2",
-    title: "Inovasi Energi Hijau",
-    image: "https://picsum.photos/400/200?random=11",
-    category: "Energi"
-  },
-  {
-    id: "3",
-    title: "Breakthrough in Medicine",
-    image: "https://picsum.photos/400/200?random=12",
-    category: "Kesehatan"
-  }
-];
-
-const trendingNews: NewsItem[] = [
-  {
-    id: "1",
-    title: "Revolusi AI dalam Kehidupan Sehari-hari",
-    description: "Kecerdasan buatan mulai mengubah cara kita bekerja dan berinteraksi.",
-    image: "https://picsum.photos/400/200?random=5",
-    category: "Teknologi",
-    date: "15 Des 2024",
-    readTime: "4 min read",
-    isTrending: true
-  },
-  {
-    id: "2",
-    title: "Mobil Listrik Capai 50% Penjualan Global",
-    description: "Transisi ke kendaraan listrik semakin cepat dari perkiraan.",
-    image: "https://picsum.photos/400/200?random=6",
-    category: "Otomotif",
-    date: "14 Des 2024",
-    readTime: "3 min read",
-    isTrending: true
-  }
-];
-
-const featuredNews: NewsItem[] = [
-  {
-    id: "3",
-    title: "Teknologi IoT untuk Pertanian Hidroponik",
-    description: "Petani mulai memanfaatkan IoT untuk memantau nutrisi tanaman secara real-time.",
-    image: "https://picsum.photos/400/200?random=1",
-    category: "Teknologi",
-    date: "15 Des 2024",
-    readTime: "3 min read",
-    isFeatured: true
-  },
-  {
-    id: "4",
-    title: "Energi Terbarukan Semakin Digemari",
-    description: "Panel surya kini semakin terjangkau dan digunakan oleh banyak rumah tangga.",
-    image: "https://picsum.photos/400/200?random=2",
-    category: "Energi",
-    date: "14 Des 2024",
-    readTime: "2 min read",
-    isFeatured: true
-  },
-  {
-    id: "5",
-    title: "AI Membantu Dunia Medis",
-    description: "Artificial Intelligence mulai digunakan untuk diagnosa penyakit lebih cepat.",
-    image: "https://picsum.photos/400/200?random=3",
-    category: "Kesehatan",
-    date: "13 Des 2024",
-    readTime: "4 min read",
-    isFeatured: true
-  },
-  {
-    id: "6",
-    title: "Inovasi Teknologi di Bidang Pendidikan",
-    description: "Sistem pembelajaran daring semakin canggih dengan integrasi AI dan VR.",
-    image: "https://picsum.photos/400/200?random=4",
-    category: "Pendidikan",
-    date: "12 Des 2024",
-    readTime: "3 min read",
-    isFeatured: true
-  }
-];
-
-const categories = [
-  { id: "1", name: "Teknologi", icon: "hardware-chip" },
-  { id: "2", name: "Kesehatan", icon: "medkit" },
-  { id: "3", name: "Bisnis", icon: "business" },
-  { id: "4", name: "Olahraga", icon: "basketball" },
-  { id: "5", name: "Hiburan", icon: "film" },
-  { id: "6", name: "Politik", icon: "megaphone" }
-];
 
 export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [activeBanner, setActiveBanner] = useState<number>(0);
+  const [timeframe, setTimeframe] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
+  const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
   const scrollX = useRef(new Animated.Value(0)).current;
+
+  // Filter news berdasarkan kategori (sama seperti di NewsScreen)
+  const filteredNews = selectedCategory === "Semua" 
+    ? newsData 
+    : newsData.filter(item => item.category === selectedCategory);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -162,7 +62,7 @@ export default function HomeScreen() {
 
     return (
       <Animated.View style={[styles.bannerItem, { transform: [{ scale }] }]}>
-        <Image source={{ uri: item.image }} style={styles.bannerImage} />
+        <Image source={typeof item.image === 'string' ? { uri: item.image } : item.image} style={styles.bannerImage}/>
         <View style={styles.bannerOverlay}>
           <Text style={styles.bannerCategory}>{item.category}</Text>
           <Text style={styles.bannerTitle}>{item.title}</Text>
@@ -174,16 +74,26 @@ export default function HomeScreen() {
     );
   };
 
-  const renderCategoryItem = ({ item }: { item: typeof categories[0] }) => (
-    <TouchableOpacity style={styles.categoryItem}>
-      <View style={styles.categoryIcon}>
-        <Ionicons name={item.icon as any} size={24} color="#007AFF" />
-      </View>
-      <Text style={styles.categoryName}>{item.name}</Text>
+  // Filter Kategori untuk Featured News
+  const renderCategoryChip = ({ item }: { item: string }) => (
+    <TouchableOpacity
+      style={[
+        styles.chip,
+        selectedCategory === item && styles.chipSelected
+      ]}
+      onPress={() => setSelectedCategory(item)}
+    >
+      <Text style={[
+        styles.chipText,
+        selectedCategory === item && styles.chipTextSelected
+      ]}>
+        {item}
+      </Text>
     </TouchableOpacity>
   );
 
-  const renderNewsItem = ({ item }: { item: NewsItem }) => {
+  // Render Item Featured News (sama seperti di NewsScreen)
+  const renderFeaturedItem = ({ item }: { item: NewsItem }) => {
     const scaleValue = new Animated.Value(1);
     
     const onPressIn = () => {
@@ -200,36 +110,39 @@ export default function HomeScreen() {
       }).start();
     };
 
+    const handlePress = () => {
+      console.log('Featured news pressed:', item.title);
+      // Navigate to news detail
+    };
+
     return (
       <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
         <TouchableOpacity 
-          style={styles.newsCard}
+          style={styles.featuredCard}
           onPressIn={onPressIn}
           onPressOut={onPressOut}
+          onPress={handlePress}
           activeOpacity={0.9}
         >
-          <View style={styles.imageContainer}>
-            <Image source={{ uri: item.image }} style={styles.newsImage} />
-            <View style={styles.categoryBadge}>
-              <Text style={styles.categoryText}>{item.category}</Text>
+          <View style={styles.featuredImageContainer}>
+            <Image 
+              source={typeof item.image === 'string' ? { uri: item.image } : item.image} 
+              style={styles.featuredImage}
+            />
+            <View style={styles.featuredCategoryBadge}>
+              <Text style={styles.featuredCategoryText}>{item.category}</Text>
             </View>
           </View>
           
-          <View style={styles.newsContent}>
-            <Text style={styles.newsTitle}>{item.title}</Text>
-            <Text style={styles.newsDesc} numberOfLines={2}>
+          <View style={styles.featuredContent}>
+            <Text style={styles.featuredNewsTitle}>{item.title}</Text>
+            <Text style={styles.featuredNewsDesc} numberOfLines={2}>
               {item.description}
             </Text>
             
-            <View style={styles.metaContainer}>
-              <Text style={styles.date}>{item.date}</Text>
-              <Text style={styles.readTime}>• {item.readTime}</Text>
-              {item.isTrending && (
-                <View style={styles.trendingBadge}>
-                  <Ionicons name="trending-up" size={12} color="#fff" />
-                  <Text style={styles.trendingText}>Trending</Text>
-                </View>
-              )}
+            <View style={styles.featuredMetaContainer}>
+              <Text style={styles.featuredDate}>{item.date}</Text>
+              <Text style={styles.featuredReadTime}>• {item.readTime}</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -237,12 +150,137 @@ export default function HomeScreen() {
     );
   };
 
-  const renderSectionHeader = ({ title }: { title: string }) => (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <TouchableOpacity>
-        <Text style={styles.seeAllText}>Lihat Semua</Text>
-      </TouchableOpacity>
+  const renderLeaderboardItem = ({ item, index }: { item: LeaderboardItem; index: number }) => {
+    const isLastItem = index === leaderboardData.length - 1;
+    
+    const getRankStyle = () => {
+      switch (item.rank) {
+        case 1: return styles.rankNumber1;
+        case 2: return styles.rankNumber2;
+        case 3: return styles.rankNumber3;
+        default: return styles.rankNumber;
+      }
+    };
+
+    const getAvatarStyle = () => {
+      return item.rank <= 3 ? [styles.avatar, styles.avatarTop3] : styles.avatar;
+    };
+
+    const getChangeStyle = () => {
+      switch (item.change) {
+        case 'up': return styles.changeUp;
+        case 'down': return styles.changeDown;
+        case 'same': return styles.changeSame;
+        default: return styles.changeSame;
+      }
+    };
+
+    const getChangeTextStyle = () => {
+      switch (item.change) {
+        case 'up': return styles.changeTextUp;
+        case 'down': return styles.changeTextDown;
+        case 'same': return styles.changeTextSame;
+        default: return styles.changeTextSame;
+      }
+    };
+
+    const getChangeIcon = () => {
+      switch (item.change) {
+        case 'up': return "caret-up";
+        case 'down': return "caret-down";
+        case 'same': return "remove";
+        default: return "remove";
+      }
+    };
+
+    const getChangeText = () => {
+      if (item.change === 'same') return "Same";
+      return item.changeAmount?.toString() || "0";
+    };
+
+    return (
+      <View style={[styles.leaderboardItem, isLastItem && styles.leaderboardItemLast]}>
+        <View style={styles.rankContainer}>
+          <Text style={getRankStyle()}>{item.rank}</Text>
+        </View>
+
+
+        
+        <Image source={typeof item.avatar === 'string' ? {uri: item.avatar} : item.avatar} style={getAvatarStyle()} />
+        
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>{item.name}</Text>
+          <Text style={styles.userPoints}>{item.points.toLocaleString()} Terjual</Text>
+        </View>
+        
+        <View style={getChangeStyle()}>
+          <Ionicons 
+            name={getChangeIcon() as any} 
+            size={12} 
+            color={getChangeTextStyle().color} 
+          />
+          <Text style={[styles.changeText, getChangeTextStyle()]}>
+            {getChangeText()}
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
+  const FeaturedNewsSection = () => (
+    <View style={styles.featuredContainer}>
+      <View style={styles.featuredHeader}>
+        <Text style={styles.featuredTitle}>Berita Terkini</Text>
+        <TouchableOpacity>
+          <Link href="/news">
+            <Text style={styles.seeAllText}>Lihat Semua</Text>
+          </Link>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.categoriesSection}>
+        <FlatList
+          data={categories}
+          renderItem={renderCategoryChip}
+          keyExtractor={(item: string) => item}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipsContainer}
+        />
+      </View>
+
+      <FlatList
+        data={filteredNews}
+        renderItem={renderFeaturedItem}
+        keyExtractor={(item: NewsItem) => item.id}
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={false}
+        contentContainerStyle={styles.featuredListContainer}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>Tidak ada berita untuk kategori ini</Text>
+          </View>
+        }
+      />
+    </View>
+  );
+
+  const LeaderboardSection = () => (
+    <View style={styles.section}>
+      <View style={styles.leaderboardCard}>
+        <View style={styles.leaderboardHeader}>
+          <View style={styles.leaderboardTitleContainer}>
+            <Text style={styles.leaderboardTitle}> Penjualan Leaderboard Terkini</Text>
+          </View>
+        </View>
+
+        <FlatList
+          data={leaderboardData}
+          renderItem={renderLeaderboardItem}
+          keyExtractor={(item) => item.id}
+          scrollEnabled={false}
+        />
+      </View>
     </View>
   );
 
@@ -279,8 +317,8 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#007AFF"]}
-            tintColor="#007AFF"
+            colors={["#0B2B26"]}
+            tintColor="#0B2B26"
           />
         }
       >
@@ -321,286 +359,12 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Categories */}
-        <View style={styles.section}>
-          {renderSectionHeader({ title: "Kategori" })}
-          <FlatList
-            data={categories}
-            renderItem={renderCategoryItem}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoriesList}
-          />
-        </View>
+        {/* Featured News - Menggunakan data yang sama dengan NewsScreen */}
+        <FeaturedNewsSection />
 
-        {/* Trending News */}
-        <View style={styles.section}>
-          {renderSectionHeader({ title: "Trending Sekarang" })}
-          <FlatList
-            data={trendingNews}
-            renderItem={renderNewsItem}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
-          />
-        </View>
-
-        {/* Featured News */}
-        <View style={styles.section}>
-          {renderSectionHeader({ title: "Berita Pilihan" })}
-          {featuredNews.map((item) => (
-            <View key={item.id}>
-              {renderNewsItem({ item })}
-            </View>
-          ))}
-        </View>
+        {/* Leaderboard */}
+        <LeaderboardSection />
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f8f9fa",
-  },
-  scrollView: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 15,
-    backgroundColor: "#fff",
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1a1a1a",
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#666",
-    marginTop: 2,
-  },
-  notificationButton: {
-    padding: 8,
-    position: "relative",
-  },
-  notificationBadge: {
-    position: "absolute",
-    top: 6,
-    right: 6,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#FF3B30",
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    marginHorizontal: 20,
-    marginVertical: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 10,
-    fontSize: 16,
-    color: "#333",
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    marginBottom: 15,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#1a1a1a",
-  },
-  seeAllText: {
-    fontSize: 14,
-    color: "#007AFF",
-    fontWeight: "500",
-  },
-  bannerSection: {
-    marginBottom: 25,
-  },
-  bannerItem: {
-    width: width - 40,
-    marginHorizontal: 20,
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-  bannerImage: {
-    width: "100%",
-    height: 180,
-  },
-  bannerOverlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 20,
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  bannerCategory: {
-    color: "#007AFF",
-    fontSize: 12,
-    fontWeight: "600",
-    marginBottom: 5,
-  },
-  bannerTitle: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  readButton: {
-    alignSelf: "flex-start",
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  readButtonText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  bannerPagination: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 10,
-  },
-  paginationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#007AFF",
-    marginHorizontal: 4,
-  },
-  categoriesList: {
-    paddingHorizontal: 15,
-  },
-  categoryItem: {
-    alignItems: "center",
-    marginRight: 20,
-  },
-  categoryIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#f0f0f0",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  categoryName: {
-    fontSize: 12,
-    color: "#666",
-    fontWeight: "500",
-  },
-  horizontalList: {
-    paddingHorizontal: 15,
-  },
-  newsCard: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    marginHorizontal: 15,
-    marginBottom: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    overflow: "hidden",
-  },
-  imageContainer: {
-    position: "relative",
-  },
-  newsImage: {
-    width: "100%",
-    height: 160,
-  },
-  categoryBadge: {
-    position: "absolute",
-    top: 12,
-    left: 12,
-    backgroundColor: "rgba(0, 122, 255, 0.9)",
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  categoryText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  newsContent: {
-    padding: 16,
-  },
-  newsTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#1a1a1a",
-    marginBottom: 8,
-    lineHeight: 22,
-  },
-  newsDesc: {
-    fontSize: 14,
-    color: "#666",
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  metaContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-  },
-  date: {
-    fontSize: 12,
-    color: "#999",
-    fontWeight: "500",
-  },
-  readTime: {
-    fontSize: 12,
-    color: "#999",
-    marginLeft: 4,
-  },
-  trendingBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FF3B30",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-    marginLeft: 8,
-  },
-  trendingText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "600",
-    marginLeft: 2,
-  },
-});
