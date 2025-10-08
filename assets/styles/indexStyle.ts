@@ -1,0 +1,493 @@
+// styles.ts
+import { StyleSheet, Dimensions } from "react-native";
+
+const { width } = Dimensions.get('window');
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f8f9fa",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 15,
+    backgroundColor: "#fff",
+  },
+  greeting: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#051F20",
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#051F20",
+    opacity: 0.5,
+    marginTop: 2,
+  },
+  notificationButton: {
+    padding: 8,
+    position: "relative",
+  },
+  notificationBadge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FF3B30",
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    marginHorizontal: 20,
+    marginVertical: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 5,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 16,
+    color: "#333",
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#051F20",
+  },
+  seeAllText: {
+    fontSize: 14,
+    color: "#051F20",
+    fontWeight: "500",
+  },
+  bannerSection: {
+    marginBottom: 25,
+  },
+  bannerItem: {
+    width: width - 40,
+    marginHorizontal: 20,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  bannerImage: {
+    width: "100%",
+    height: 180,
+  },
+  bannerOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  bannerCategory: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+    marginBottom: 5,
+  },
+  bannerTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  readButton: {
+    alignSelf: "flex-start",
+    backgroundColor: "#051F20",
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  readButtonText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  bannerPagination: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 10,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#051F20",
+    marginHorizontal: 4,
+  },
+  horizontalList: {
+    paddingHorizontal: 15,
+  },
+  newsCard: {
+    backgroundColor: "#daf1de",
+    borderRadius: 16,
+    marginHorizontal: 15,
+    marginBottom: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    overflow: "hidden",
+  },
+  imageContainer: {
+    position: "relative",
+  },
+  newsImage: {
+    width: "100%",
+    height: 160,
+  },
+  categoryBadge: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    backgroundColor: "rgba(0, 122, 255, 0.9)",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  categoryText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  newsContent: {
+    padding: 16,
+  },
+  newsTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+    marginBottom: 8,
+    lineHeight: 22,
+  },
+  newsDesc: {
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  metaContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
+  date: {
+    fontSize: 12,
+    color: "#999",
+    fontWeight: "500",
+  },
+  readTime: {
+    fontSize: 12,
+    color: "#999",
+    marginLeft: 4,
+  },
+  trendingBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FF3B30",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  trendingText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "600",
+    marginLeft: 2,
+  },
+  leaderboardCard: {
+    backgroundColor: "#daf1de",
+    borderRadius: 16,
+    marginHorizontal: 15,
+    marginBottom: 20,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  leaderboardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 15,
+  },
+  leaderboardTitleContainer: {
+    flex: 1,
+  },
+  leaderboardTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#051F20",
+    marginBottom: 4,
+  },
+  leaderboardItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  leaderboardItemLast: {
+    borderBottomWidth: 0,
+  },
+  rankContainer: {
+    width: 36,
+    alignItems: "center",
+    marginRight: 12,
+  },
+  rankNumber: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+  },
+  rankNumber1: {
+    fontSize: 18,
+    color: "#FFD700", // Gold
+    fontWeight: "800",
+  },
+  rankNumber2: {
+    fontSize: 18,
+    color: "#C0C0C0", // Silver
+    fontWeight: "800",
+  },
+  rankNumber3: {
+    fontSize: 18,
+    color: "#CD7F32", // Bronze
+    fontWeight: "800",
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: "#f0f0f0",
+  },
+  avatarTop3: {
+    borderColor: "#163832",
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#051F20",
+    marginBottom: 2,
+  },
+  userPoints: {
+    fontSize: 14,
+    color: "#666",
+  },
+  changeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  changeUp: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#E8F5E8",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  changeDown: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFE8E8",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  changeSame: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0F0F0",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  changeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginLeft: 2,
+  },
+  changeTextUp: {
+    color: "#34C759",
+  },
+  changeTextDown: {
+    color: "#FF3B30",
+  },
+  changeTextSame: {
+    color: "#666",
+  },
+  viewAllButton: {
+    backgroundColor: "#f8f9fa",
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  viewAllButtonText: {
+    color: "#007AFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  featuredContainer: {
+    marginBottom: 20,
+  },
+  featuredHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginBottom: 15,
+  },
+  featuredTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+  },
+  categoriesSection: {
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#8EB69B50",
+    paddingVertical: 12,
+    marginBottom: 15,
+  },
+  chipsContainer: {
+    paddingHorizontal: 15,
+  },
+  chip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#daf1de",
+    opacity: 0.5,
+    marginRight: 8,
+  },
+  chipSelected: {
+    backgroundColor: "#0B2B26",
+    opacity: 1,
+  },
+  chipText: {
+    fontSize: 14,
+    color: "#051F20",
+    fontWeight: "500",
+  },
+  chipTextSelected: {
+    color: "#DAF1DE",
+  },
+  featuredListContainer: {
+    padding: 15,
+  },
+  featuredCard: {
+    backgroundColor: "#daf1de",
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    overflow: "hidden",
+  },
+  featuredImageContainer: {
+    position: "relative",
+  },
+  featuredImage: {
+    width: "100%",
+    height: 200,
+  },
+  featuredCategoryBadge: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    backgroundColor: "#0B2B26",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  featuredCategoryText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  featuredContent: {
+    padding: 16,
+  },
+  featuredNewsTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+    marginBottom: 8,
+    lineHeight: 24,
+  },
+  featuredNewsDesc: {
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  featuredMetaContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  featuredDate: {
+    fontSize: 12,
+    color: "#999",
+    fontWeight: "500",
+  },
+  featuredReadTime: {
+    fontSize: 12,
+    color: "#999",
+    marginLeft: 4,
+  },
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: "#999",
+    textAlign: "center",
+  },
+});

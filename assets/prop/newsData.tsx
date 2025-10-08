@@ -11,6 +11,8 @@ export type NewsItem = {
   category: string;
   date: string;
   readTime: string;
+  isTrending?: boolean;
+  isFeatured?: boolean;
 };
 
 // Data
@@ -37,7 +39,7 @@ export let newsData: NewsItem[] = [
     id: "3",
     title: "Tren Bisnis Sayuran Pakcoy Hidroponik",
     description: "Bisnis Penjualan sayuran Pakcoy hidroponik saat ini sedang merambah petani sayuran.",
-    image: require('@/assets/images/pakcoy.jpg'),
+    image: require('@/assets/images/pakcoyfarm.jpg'),
     category: "Inovasi",
     date: "13 Des 2024",
     readTime: "4 min read"
