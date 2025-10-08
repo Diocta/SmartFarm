@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#DAF1DE",
   },
 
   headerContainer: {
@@ -27,54 +27,59 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 40,
+    fontSize: 50,
     fontWeight: "bold",
-    color: "#12372A",
+    color: "#0B2B26",
     marginBottom: 5,
     textAlign: "center",
   },
   subtitle: {
     fontSize: 14,
-    color: "#666",
-    marginBottom: 20,
+    color: "#051F20",
+    opacity: 0.5,
+    marginBottom: 50,
     textAlign: "center",
   },
 
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#DAF1DE",
+    backgroundColor: "#8EB69B",
     borderRadius: 15,
     paddingHorizontal: 12,
-    margin: 15,
+    marginLeft: 30,
+    marginRight: 30,
+    marginBottom: 15,
   },
   icon: {
     marginRight: 8,
   },
   input: {
     flex: 1,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: "#12372A",
+    padding: 12,
+    marginLeft: 8,
+    color: "#0B2B26",
   },
 
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 15,
+    marginHorizontal: 25,
   },
   link: {
-    color: "#3B7D3A",
+    color: "#235247",
     fontWeight: "500",
-    margin: 15,
+    marginBottom: 25,
+    marginHorizontal: 15,
   },
 
   button: {
-    backgroundColor: "#12372A",
+    backgroundColor: "#0B2B26",
     padding: 15,
     borderRadius: 30,
     alignItems: "center",
-    margin: 15,
+    margin: 30,
   },
   buttonText: {
     color: "#fff",
@@ -85,7 +90,7 @@ const styles = StyleSheet.create({
   footer: {
     textAlign: "center",
     fontSize: 14,
-    color: "#666",
+    color: "#235247",
   },
 });
 

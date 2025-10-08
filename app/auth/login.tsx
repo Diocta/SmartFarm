@@ -1,19 +1,37 @@
-import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
+// frontend/app/auth/login.tsx
+import { View, Text, TextInput, TouchableOpacity, Image, Alert } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import Svg, { Path } from "react-native-svg"; // ✅ untuk lekukan
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import Svg, { Path } from "react-native-svg"; 
 import styles from "../../assets/styles/loginStyle";
+import API from "../../api";  
+import AsyncStorage from "@react-native-async-storage/async-storage"; 
 
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
-  const handleLogin = () => {
-    if (email && password) {
-      router.replace("/(tabs)");
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Email dan password harus diisi");
+      return;
+    }
+
+    try {
+      const res = await API.post("/auth/login", { email, password });
+      const { token, user } = res.data;
+
+      // ✅ simpan token ke AsyncStorage
+      await AsyncStorage.setItem("token", token.toString());
+
+      Alert.alert("Sukses", `Selamat datang ${user.username}`);
+      router.replace("/(tabs)"); // masuk ke halaman utama
+    } catch (err: any) {
+      console.error("Login error:", err);
+      Alert.alert("Login gagal", err.response?.data?.message || "Terjadi kesalahan");
     }
   };
 
@@ -26,7 +44,6 @@ export default function Login() {
           style={styles.headerImage}
           resizeMode="cover"
         />
-        {/* Lekukan putih */}
         <Svg
           height="100"
           width="100%"
@@ -40,7 +57,7 @@ export default function Login() {
                906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,
                214.34,3V0H0V27.35A600.21,600.21,0,
                0,0,321.39,56.44Z"
-            fill="#fff"
+            fill="#DAF1DE"
             transform="scale(1, -1) translate(0, -120)"
           />
         </Svg>
