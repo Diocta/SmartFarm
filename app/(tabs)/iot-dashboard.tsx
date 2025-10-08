@@ -3,7 +3,7 @@ import { Buffer } from "buffer";
 import mqtt, { MqttClient } from "mqtt";
 import process from "process";
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Animated, ScrollView, Text, TouchableOpacity, View, Image, ActivityIndicator } from "react-native";
 import "react-native-get-random-values";
 // @ts-ignore
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -11,6 +11,9 @@ import { styles } from "../../assets/styles/iot-dashboard.styles";
 
 (global as any).Buffer = Buffer;
 (global as any).process = process;
+
+// Backend Configuration
+const BACKEND_URL = "http://192.168.1.50:3000"; // Ganti dengan IP Backend Anda
 
 // Data statis tanaman
 const PLANT_DATA = {
@@ -37,6 +40,14 @@ const IoTDashboard: React.FC = () => {
   const [pumpPpm, setPumpPpm] = useState<"ON" | "OFF">("OFF");
   const [pumpPh, setPumpPh] = useState<"ON" | "OFF">("OFF");
   const [mode, setMode] = useState<"manual" | "auto">("manual");
+  
+  // State untuk ESP32-CAM
+  const [cameraImage, setCameraImage] = useState<string | null>(null);
+  const [isLoadingImage, setIsLoadingImage] = useState<boolean>(false);
+  const [lastImageUpdate, setLastImageUpdate] = useState<Date | null>(null);
+  const [streamUrl, setStreamUrl] = useState<string>("");
+  const [isStreaming, setIsStreaming] = useState<boolean>(false);
+  const [esp32camIP, setEsp32camIP] = useState<string>("192.168.1.100"); // Ganti dengan IP ESP32-CAM Anda
 
   // Animations
   const pumpPhAnimation = useRef(new Animated.Value(pumpPh === "ON" ? 1 : 0)).current;
@@ -77,6 +88,7 @@ const IoTDashboard: React.FC = () => {
       setIsConnected(true);
       mqttClient.subscribe("hydroponic/data/#");
       mqttClient.subscribe("hydroponic/mode");
+      mqttClient.subscribe("hydroponic/camera/image");
     });
 
     mqttClient.on("error", (err) => {
@@ -96,6 +108,22 @@ const IoTDashboard: React.FC = () => {
       if (topic === "hydroponic/data/pump_ppm") setPumpPpm(msg as "ON" | "OFF");
       if (topic === "hydroponic/data/pump_ph") setPumpPh(msg as "ON" | "OFF");
       if (topic === "hydroponic/mode") setMode(msg as "manual" | "auto");
+      
+      // Handle gambar dari ESP32-CAM via MQTT (optional)
+      if (topic === "hydroponic/camera/image") {
+        try {
+          if (msg.startsWith("data:image")) {
+            setCameraImage(msg);
+          } else {
+            setCameraImage(`data:image/jpeg;base64,${msg}`);
+          }
+          setLastImageUpdate(new Date());
+          setIsLoadingImage(false);
+        } catch (error) {
+          console.error("Error processing camera image:", error);
+          setIsLoadingImage(false);
+        }
+      }
     });
 
     setClient(mqttClient);
@@ -104,6 +132,17 @@ const IoTDashboard: React.FC = () => {
       mqttClient.end();
     };
   }, []);
+
+  // Auto fetch dari database setiap 10 detik (optional)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isStreaming && isConnected) {
+        fetchLatestImageFromDB();
+      }
+    }, 10000); // 10 detik
+
+    return () => clearInterval(interval);
+  }, [isStreaming, isConnected]);
 
   // --- Controls ---
   const changeMode = (newMode: "manual" | "auto") => {
@@ -126,6 +165,47 @@ const IoTDashboard: React.FC = () => {
     }
   };
 
+  // Fungsi untuk request gambar baru via MQTT
+  const requestNewImage = () => {
+    if (client && isConnected) {
+      setIsLoadingImage(true);
+      client.publish("hydroponic/camera/capture", "REQUEST");
+      
+      // Fallback: fetch dari database setelah 3 detik
+      setTimeout(() => {
+        fetchLatestImageFromDB();
+      }, 3000);
+    }
+  };
+
+  // Toggle streaming
+  const toggleStreaming = () => {
+    if (isStreaming) {
+      setStreamUrl("");
+      setIsStreaming(false);
+    } else {
+      setStreamUrl(`http://${esp32camIP}:81/stream`);
+      setIsStreaming(true);
+    }
+  };
+
+  // Fetch captured images from database
+  const fetchLatestImageFromDB = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/latest-image`);
+      const data = await response.json();
+      
+      if (data.success && data.image) {
+        setCameraImage(data.image);
+        setLastImageUpdate(new Date(data.timestamp));
+      }
+      setIsLoadingImage(false);
+    } catch (error) {
+      console.error('Error fetching image from DB:', error);
+      setIsLoadingImage(false);
+    }
+  };
+
   // --- Helpers ---
   const getPhStatus = (value: number) => {
     if (value >= PLANT_DATA.standardPhMin && value <= PLANT_DATA.standardPhMax) {
@@ -139,6 +219,16 @@ const IoTDashboard: React.FC = () => {
       return "Optimal";
     }
     return value < standard * 0.9 ? "Low Nutrients" : "High Nutrients";
+  };
+
+  const formatLastUpdate = (date: Date | null) => {
+    if (!date) return "No image yet";
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diff < 60) return `${diff} seconds ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+    return date.toLocaleTimeString();
   };
 
   const standardPpm = PLANT_DATA.getStandardPPM(PLANT_DATA.age);
@@ -193,6 +283,79 @@ const IoTDashboard: React.FC = () => {
           <Text style={styles.deviceStatusText}>
             {isConnected ? "Connected (Live)" : "Disconnected"}
           </Text>
+        </View>
+      </View>
+
+      {/* Camera Card - ESP32-CAM */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>📷 Live Camera Feed</Text>
+          <View style={styles.cameraButtonsRow}>
+            <TouchableOpacity
+              style={[styles.captureButton, styles.streamButton, isStreaming && styles.streamButtonActive]}
+              onPress={toggleStreaming}
+              disabled={!isConnected}
+            >
+              <Icon name={isStreaming ? "video-off" : "video"} size={18} color="#fff" />
+              <Text style={styles.captureButtonText}>
+                {isStreaming ? "Stop" : "Stream"}
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.captureButton, !isConnected && styles.disabledButton]}
+              onPress={requestNewImage}
+              disabled={!isConnected || isLoadingImage}
+            >
+              <Icon name="camera-retake" size={18} color="#fff" />
+              <Text style={styles.captureButtonText}>Capture</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        <View style={styles.cameraContainer}>
+          {isLoadingImage && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color="#8eb69b" />
+              <Text style={styles.loadingText}>Capturing image...</Text>
+            </View>
+          )}
+          
+          {isStreaming && streamUrl ? (
+            <Image
+              source={{ uri: streamUrl }}
+              style={styles.cameraImage}
+              resizeMode="cover"
+            />
+          ) : cameraImage ? (
+            <Image
+              source={{ uri: cameraImage }}
+              style={styles.cameraImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.noImagePlaceholder}>
+              <Icon name="camera-off" size={48} color="#94a3b8" />
+              <Text style={styles.noImageText}>No image available</Text>
+              <Text style={styles.noImageSubtext}>
+                {isStreaming ? "Starting stream..." : "Tap Stream for live video or Capture for snapshot"}
+              </Text>
+            </View>
+          )}
+        </View>
+        
+        <View style={styles.cameraInfo}>
+          {isStreaming && (
+            <View style={styles.streamingBadge}>
+              <View style={styles.streamingDot} />
+              <Text style={styles.streamingText}>LIVE STREAMING</Text>
+            </View>
+          )}
+          {lastImageUpdate && !isStreaming && (
+            <Text style={styles.imageTimestamp}>
+              Last captured: {formatLastUpdate(lastImageUpdate)}
+            </Text>
+          )}
         </View>
       </View>
 
