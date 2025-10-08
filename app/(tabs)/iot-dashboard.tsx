@@ -2,8 +2,19 @@
 import { Buffer } from "buffer";
 import mqtt, { MqttClient } from "mqtt";
 import process from "process";
-import React, { useEffect, useRef, useState } from "react";
-import { Animated, ScrollView, Text, TouchableOpacity, View, Image, ActivityIndicator } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Image,
+  Modal,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import "react-native-get-random-values";
 // @ts-ignore
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -13,26 +24,42 @@ import { styles } from "../../assets/styles/iot-dashboard.styles";
 (global as any).process = process;
 
 // Backend Configuration
-const BACKEND_URL = "http://192.168.1.50:3000"; // Ganti dengan IP Backend Anda
+const BACKEND_URL = "http://10.218.18.16:3000";
 
-// Data statis tanaman
-const PLANT_DATA = {
+// Definisikan Tipe Data Tanaman
+interface PlantData {
+  name: string;
+  count: number;
+  standardPhMin: number;
+  standardPhMax: number;
+  plantingDate: string;
+  hss: number; // Tambahkan field HSS dari backend
+}
+
+// Data default / fallback
+const DEFAULT_PLANT_DATA: PlantData = {
   name: "Selada (Lettuce)",
-  age: 23, // Hari Setelah Semai (HSS)
   count: 24,
-
-  getStandardPPM: (hss: number) => {
-    if (hss >= 8 && hss <= 17) return 300;
-    if (hss >= 18 && hss <= 33) return 700;
-    if (hss >= 34 && hss <= 45) return 800;
-    return 0;
-  },
-
   standardPhMin: 5.5,
   standardPhMax: 6.5,
+  plantingDate: '2025-09-26',
+  hss: 0, // Default HSS
 };
 
+// Regex sederhana untuk validasi format tanggal YYYY-MM-DD
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+// Helper function tidak digunakan lagi - HSS dari backend
+// const calculateHSS = ... (DIHAPUS)
+
+
 const IoTDashboard: React.FC = () => {
+  // State Dinamis untuk Data Tanaman
+  const [plant, setPlant] = useState<PlantData>(DEFAULT_PLANT_DATA);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [editingPlant, setEditingPlant] = useState<PlantData>(DEFAULT_PLANT_DATA);
+
+  // State dan Refs Lainnya
   const [client, setClient] = useState<MqttClient | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [ph, setPh] = useState<number>(0);
@@ -40,47 +67,157 @@ const IoTDashboard: React.FC = () => {
   const [pumpPpm, setPumpPpm] = useState<"ON" | "OFF">("OFF");
   const [pumpPh, setPumpPh] = useState<"ON" | "OFF">("OFF");
   const [mode, setMode] = useState<"manual" | "auto">("manual");
-  
-  // State untuk ESP32-CAM
   const [cameraImage, setCameraImage] = useState<string | null>(null);
   const [isLoadingImage, setIsLoadingImage] = useState<boolean>(false);
   const [lastImageUpdate, setLastImageUpdate] = useState<Date | null>(null);
   const [streamUrl, setStreamUrl] = useState<string>("");
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
-  const [esp32camIP, setEsp32camIP] = useState<string>("192.168.1.100"); // Ganti dengan IP ESP32-CAM Anda
+  const [esp32camIP, setEsp32camIP] = useState<string>("10.89.200.248"); 
 
-  // Animations
   const pumpPhAnimation = useRef(new Animated.Value(pumpPh === "ON" ? 1 : 0)).current;
   const pumpPpmAnimation = useRef(new Animated.Value(pumpPpm === "ON" ? 1 : 0)).current;
   const modeSwitchAnimation = useRef(new Animated.Value(mode === "auto" ? 1 : 0)).current;
 
-  // --- Animation effects ---
-  useEffect(() => {
-    Animated.timing(pumpPhAnimation, {
-      toValue: pumpPh === "ON" ? 1 : 0,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  }, [pumpPh]);
+  // --- Calculated Values ---
+  // HSS diambil langsung dari state plant yang didapat dari backend
+  const plantAgeHSS = plant.hss;
+  
+  const getStandardPPM = (hss: number) => {
+    if (hss >= 8 && hss <= 17) return 300;
+    if (hss >= 18 && hss <= 33) return 700;
+    if (hss >= 34 && hss <= 45) return 800;
+    return 0;
+  };
+  const standardPpm = getStandardPPM(plantAgeHSS);
 
-  useEffect(() => {
-    Animated.timing(pumpPpmAnimation, {
-      toValue: pumpPpm === "ON" ? 1 : 0,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  }, [pumpPpm]);
+  // --- Health heuristic (UI only) ---
+  const phOkOverall = ph >= plant.standardPhMin && ph <= plant.standardPhMax;
+  const ppmOkOverall = standardPpm > 0 ? (ppm >= standardPpm * 0.9 && ppm <= standardPpm * 1.1) : false;
 
-  useEffect(() => {
-    Animated.timing(modeSwitchAnimation, {
-      toValue: mode === "auto" ? 1 : 0,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  }, [mode]);
+  let healthBadgeText = '';
+  let healthStatusLabel = '';
+  let healthTip = '';
+  let healthBadgeColor = '#10b981';
 
-  // --- MQTT Connection ---
+  if (phOkOverall && ppmOkOverall) {
+    healthBadgeText = 'Healthy';
+    healthStatusLabel = 'Healthy';
+    healthTip = 'Tanaman sehat. Lanjutkan pemantauan rutin dan jaga kondisi nutrisi.';
+    healthBadgeColor = '#10b981';
+  } else if (!phOkOverall && !ppmOkOverall) {
+    healthBadgeText = 'Unstable';
+    healthStatusLabel = 'Unstable (Check pH & Nutrients)';
+    healthTip = 'Periksa sistem nutrisi dan pH. Lakukan flush & restore nutrisi sesuai standar.';
+    healthBadgeColor = '#f59e0b';
+  } else if (!phOkOverall) {
+    healthBadgeText = 'pH';
+    healthStatusLabel = 'Possible Bacterial Issue (pH anomaly)';
+    healthTip = 'pH di luar standar — periksa dan sesuaikan larutan pH. Gunakan buffer atau adjuster pH.';
+    healthBadgeColor = '#ef4444';
+  } else {
+    healthBadgeText = 'PPM';
+    healthStatusLabel = 'Possible Fungal/Nutrient Issue (PPM anomaly)';
+    healthTip = 'Konsentrasi nutrisi tidak sesuai — sesuaikan PPM perlahan, periksa tanda layu atau bercak pada daun.';
+    healthBadgeColor = '#f97316';
+  }
+
+
+  // --- API/Database Functions ---
+
+  // 1. Ambil data tanaman terbaru dari DB - HSS dihitung di backend
+  const fetchPlantData = useCallback(async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/plant-data`);
+      const data = await response.json();
+
+      if (data.success && data.plant) {
+        // Normalisasi tanggal ke format YYYY-MM-DD
+        let normalizedDate = DEFAULT_PLANT_DATA.plantingDate;
+        if (data.plant.plantingDate) {
+          const rawDate = new Date(data.plant.plantingDate);
+          if (!isNaN(rawDate.getTime())) {
+            const year = rawDate.getUTCFullYear();
+            const month = String(rawDate.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(rawDate.getUTCDate()).padStart(2, '0');
+            normalizedDate = `${year}-${month}-${day}`;
+          }
+        }
+        
+        const fetchedPlant = {
+          name: data.plant.name || DEFAULT_PLANT_DATA.name,
+          count: Number(data.plant.count) || DEFAULT_PLANT_DATA.count,
+          standardPhMin: Number(data.plant.standardPhMin) || DEFAULT_PLANT_DATA.standardPhMin,
+          standardPhMax: Number(data.plant.standardPhMax) || DEFAULT_PLANT_DATA.standardPhMax,
+          plantingDate: normalizedDate,
+          hss: Number(data.plant.hss) || 0, // Ambil HSS dari backend
+        };
+        
+        console.log("📊 Data fetched from backend:", fetchedPlant); // Debug log
+        
+        setPlant(fetchedPlant);
+        setEditingPlant(fetchedPlant);
+      } else {
+        console.warn("Gagal mengambil data plant atau data kosong:", data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching plant data:", error);
+    }
+  }, []);
+
+  // 2. Kirim data tanaman yang diubah ke DB
+  const updatePlantData = useCallback(async () => {
+    // Validasi sederhana
+    if (editingPlant.count <= 0) {
+        Alert.alert("Gagal", "Jumlah Unit harus angka positif.");
+        return;
+    }
+    
+    // Validasi tanggal
+    if (!DATE_REGEX.test(editingPlant.plantingDate)) {
+        Alert.alert("Gagal", "Format Tanggal Tanam harus YYYY-MM-DD yang valid.");
+        return;
+    }
+    
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/plant-data`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editingPlant.name,
+          count: editingPlant.count,
+          standardPhMin: editingPlant.standardPhMin,
+          standardPhMax: editingPlant.standardPhMax,
+          plantingDate: editingPlant.plantingDate, 
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setPlant(editingPlant);
+        setIsModalVisible(false);
+        Alert.alert("Sukses", "Data tanaman berhasil diperbarui.");
+      } else {
+        Alert.alert("Gagal", `Gagal memperbarui data: ${data.message || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error updating plant data:", error);
+      Alert.alert("Error", "Gagal terhubung ke backend untuk update data.");
+    }
+  }, [editingPlant]);
+
+  // Fungsi untuk membuka modal edit
+  const openEditModal = () => {
+    setEditingPlant(plant);
+    setIsModalVisible(true);
+  };
+  
+  // --- useEffects ---
+  
+  // Initial fetch untuk data tanaman dan setup MQTT
   useEffect(() => {
+    fetchPlantData();
+    
     const mqttClient = mqtt.connect("wss://mqtt-dashboard.com:8884/mqtt");
 
     mqttClient.on("connect", () => {
@@ -109,14 +246,10 @@ const IoTDashboard: React.FC = () => {
       if (topic === "hydroponic/data/pump_ph") setPumpPh(msg as "ON" | "OFF");
       if (topic === "hydroponic/mode") setMode(msg as "manual" | "auto");
       
-      // Handle gambar dari ESP32-CAM via MQTT (optional)
       if (topic === "hydroponic/camera/image") {
         try {
-          if (msg.startsWith("data:image")) {
-            setCameraImage(msg);
-          } else {
-            setCameraImage(`data:image/jpeg;base64,${msg}`);
-          }
+          const base64Image = msg.startsWith("data:image") ? msg : `data:image/jpeg;base64,${msg}`;
+          setCameraImage(base64Image);
           setLastImageUpdate(new Date());
           setIsLoadingImage(false);
         } catch (error) {
@@ -131,18 +264,33 @@ const IoTDashboard: React.FC = () => {
     return () => {
       mqttClient.end();
     };
-  }, []);
+  }, [fetchPlantData]);
 
-  // Auto fetch dari database setiap 10 detik (optional)
+  // Auto fetch dari database setiap 10 detik
   useEffect(() => {
     const interval = setInterval(() => {
       if (!isStreaming && isConnected) {
-        fetchLatestImageFromDB();
+        if (Date.now() % 60000 < 10000) { 
+            fetchPlantData();
+        }
       }
-    }, 10000); // 10 detik
+    }, 10000);
 
     return () => clearInterval(interval);
-  }, [isStreaming, isConnected]);
+  }, [isStreaming, isConnected, fetchPlantData]);
+
+  // Animasi pumps dan mode
+  useEffect(() => {
+    Animated.timing(pumpPhAnimation, { toValue: pumpPh === "ON" ? 1 : 0, duration: 300, useNativeDriver: false }).start();
+  }, [pumpPh]);
+
+  useEffect(() => {
+    Animated.timing(pumpPpmAnimation, { toValue: pumpPpm === "ON" ? 1 : 0, duration: 300, useNativeDriver: false }).start();
+  }, [pumpPpm]);
+
+  useEffect(() => {
+    Animated.timing(modeSwitchAnimation, { toValue: mode === "auto" ? 1 : 0, duration: 300, useNativeDriver: false }).start();
+  }, [mode]);
 
   // --- Controls ---
   const changeMode = (newMode: "manual" | "auto") => {
@@ -165,20 +313,13 @@ const IoTDashboard: React.FC = () => {
     }
   };
 
-  // Fungsi untuk request gambar baru via MQTT
   const requestNewImage = () => {
     if (client && isConnected) {
       setIsLoadingImage(true);
       client.publish("hydroponic/camera/capture", "REQUEST");
-      
-      // Fallback: fetch dari database setelah 3 detik
-      setTimeout(() => {
-        fetchLatestImageFromDB();
-      }, 3000);
     }
   };
 
-  // Toggle streaming
   const toggleStreaming = () => {
     if (isStreaming) {
       setStreamUrl("");
@@ -189,29 +330,12 @@ const IoTDashboard: React.FC = () => {
     }
   };
 
-  // Fetch captured images from database
-  const fetchLatestImageFromDB = async () => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/latest-image`);
-      const data = await response.json();
-      
-      if (data.success && data.image) {
-        setCameraImage(data.image);
-        setLastImageUpdate(new Date(data.timestamp));
-      }
-      setIsLoadingImage(false);
-    } catch (error) {
-      console.error('Error fetching image from DB:', error);
-      setIsLoadingImage(false);
-    }
-  };
-
   // --- Helpers ---
   const getPhStatus = (value: number) => {
-    if (value >= PLANT_DATA.standardPhMin && value <= PLANT_DATA.standardPhMax) {
+    if (value >= plant.standardPhMin && value <= plant.standardPhMax) {
       return "Normal";
     }
-    return value < PLANT_DATA.standardPhMin ? "Too Acidic" : "Too Basic";
+    return value < plant.standardPhMin ? "Too Acidic" : "Too Basic";
   };
 
   const getPpmStatus = (value: number, standard: number) => {
@@ -231,51 +355,24 @@ const IoTDashboard: React.FC = () => {
     return date.toLocaleTimeString();
   };
 
-  const standardPpm = PLANT_DATA.getStandardPPM(PLANT_DATA.age);
 
   // --- Anim Interpolations ---
-  const modeSliderTranslate = modeSwitchAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [2, 20],
-  });
-  const modeBackgroundColour = modeSwitchAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["#e5e7eb", "#8eb69b"],
-  });
+  const modeSliderTranslate = modeSwitchAnimation.interpolate({ inputRange: [0, 1], outputRange: [2, 20] });
+  const modeBackgroundColour = modeSwitchAnimation.interpolate({ inputRange: [0, 1], outputRange: ["#e5e7eb", "#8eb69b"] });
+  const pumpPhTranslate = pumpPhAnimation.interpolate({ inputRange: [0, 1], outputRange: [2, 26] });
+  const pumpPhBackgroundColour = pumpPhAnimation.interpolate({ inputRange: [0, 1], outputRange: ["#e5e7eb", "#4ade80"] });
+  const pumpPpmTranslate = pumpPpmAnimation.interpolate({ inputRange: [0, 1], outputRange: [2, 26] });
+  const pumpPpmBackgroundColour = pumpPpmAnimation.interpolate({ inputRange: [0, 1], outputRange: ["#e5e7eb", "#4ade80"] });
 
-  const pumpPhTranslate = pumpPhAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [2, 26],
-  });
-  const pumpPhBackgroundColour = pumpPhAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["#e5e7eb", "#4ade80"],
-  });
-
-  const pumpPpmTranslate = pumpPpmAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [2, 26],
-  });
-  const pumpPpmBackgroundColour = pumpPpmAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["#e5e7eb", "#4ade80"],
-  });
-
-  const getSliderColor = (pumpStatus: "ON" | "OFF") => {
-    if (pumpStatus === "ON") return "#22c55e";
-    return mode === "manual" ? "#ffffff" : "#e5e7eb";
-  };
-  const getIconColor = (pumpStatus: "ON" | "OFF") => {
-    if (pumpStatus === "ON") return "#fff";
-    return mode === "manual" ? "#94a3b8" : "#ccc";
-  };
+  const getSliderColor = (pumpStatus: "ON" | "OFF") => (pumpStatus === "ON" ? "#22c55e" : mode === "manual" ? "#ffffff" : "#e5e7eb");
+  const getIconColor = (pumpStatus: "ON" | "OFF") => (pumpStatus === "ON" ? "#fff" : mode === "manual" ? "#94a3b8" : "#ccc");
 
   // --- Render ---
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>🌱 Hydroponic Dashboard</Text>
 
-      {/* Device Status */}
+      {/* Device Status Card */}
       <View style={[styles.card, isConnected ? styles.cardConnected : styles.cardDisconnected]}>
         <Text style={styles.cardTitle}>Device Status</Text>
         <View style={styles.deviceStatusRow}>
@@ -286,7 +383,7 @@ const IoTDashboard: React.FC = () => {
         </View>
       </View>
 
-      {/* Camera Card - ESP32-CAM */}
+      {/* Camera Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>📷 Live Camera Feed</Text>
@@ -361,31 +458,41 @@ const IoTDashboard: React.FC = () => {
 
       {/* Plant Info */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>🥬 Informasi Tanaman</Text>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>🥬 Informasi Tanaman</Text>
+          <TouchableOpacity 
+            onPress={openEditModal}
+            style={styles.editButton}
+          >
+            <Icon name="pencil" size={20} color="#059669" />
+            <Text style={styles.editButtonText}>Edit</Text>
+          </TouchableOpacity>
+        </View>
+        
         <View style={styles.infoGrid}>
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>Sayuran</Text>
-            <Text style={styles.infoValue}>{PLANT_DATA.name}</Text>
+            <Text style={styles.infoValue}>{plant.name}</Text>
           </View>
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>Usia</Text>
-            <Text style={styles.infoValue}>{PLANT_DATA.age} HSS</Text>
+            <Text style={styles.infoValue}>{plantAgeHSS} HSS</Text> 
           </View>
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>Jumlah</Text>
-            <Text style={styles.infoValue}>{PLANT_DATA.count} unit</Text>
+            <Text style={styles.infoValue}>{plant.count} unit</Text>
           </View>
         </View>
         <View style={styles.infoDetail}>
           <Text style={styles.infoDetailLabel}>Standar PH:</Text>
           <Text style={styles.infoDetailValue}>
-            {PLANT_DATA.standardPhMin} - {PLANT_DATA.standardPhMax}
+            {plant.standardPhMin} - {plant.standardPhMax}
           </Text>
         </View>
         <View style={styles.infoDetail}>
           <Text style={styles.infoDetailLabel}>Standar PPM:</Text>
           <Text style={styles.infoDetailValue}>
-            {standardPpm} ppm (usia {PLANT_DATA.age} HSS)
+            {standardPpm} ppm (usia {plantAgeHSS} HSS)
           </Text>
         </View>
       </View>
@@ -519,6 +626,81 @@ const IoTDashboard: React.FC = () => {
           <Text style={styles.autoText}>Kontrol pH & PPM dilakukan otomatis oleh ESP32.</Text>
         )}
       </View>
+      
+      {/* MODAL EDIT DATA TANAMAN */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={isModalVisible}
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Edit Data Tanaman</Text>
+            
+            {/* Input Nama */}
+            <Text style={styles.inputLabel}>Nama Tanaman</Text>
+            <TextInput
+              style={styles.input}
+              value={editingPlant.name}
+              onChangeText={(text) => setEditingPlant({ ...editingPlant, name: text })}
+            />
+
+            {/* Input Tanggal Tanam */}
+            <Text style={styles.inputLabel}>Tanggal Tanam (YYYY-MM-DD)</Text>
+            <TextInput
+              style={[styles.input, !DATE_REGEX.test(editingPlant.plantingDate) && { borderColor: 'red' }]}
+              value={editingPlant.plantingDate}
+              onChangeText={(text) => setEditingPlant({ ...editingPlant, plantingDate: text })}
+              placeholder="Contoh: 2025-09-26"
+              keyboardType="default"
+              maxLength={10}
+            />
+            
+            {/* Input Count */}
+            <Text style={styles.inputLabel}>Jumlah Unit</Text>
+            <TextInput
+              style={styles.input}
+              value={String(editingPlant.count)}
+              onChangeText={(text) => setEditingPlant({ ...editingPlant, count: Number(text.replace(/[^0-9]/g, '')) || 0 })}
+              keyboardType="numeric"
+            />
+            
+            {/* Input PH Min */}
+            <Text style={styles.inputLabel}>Standard PH Minimum</Text>
+            <TextInput
+              style={styles.input}
+              value={String(editingPlant.standardPhMin)}
+              onChangeText={(text) => setEditingPlant({ ...editingPlant, standardPhMin: Number(text) || 0 })}
+              keyboardType="numeric"
+            />
+            
+            {/* Input PH Max */}
+            <Text style={styles.inputLabel}>Standard PH Maximum</Text>
+            <TextInput
+              style={styles.input}
+              value={String(editingPlant.standardPhMax)}
+              onChangeText={(text) => setEditingPlant({ ...editingPlant, standardPhMax: Number(text) || 0 })}
+              keyboardType="numeric"
+            />
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonCancel]}
+                onPress={() => setIsModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Batal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonSave]}
+                onPress={updatePlantData}
+              >
+                <Text style={styles.modalButtonText}>Simpan</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
