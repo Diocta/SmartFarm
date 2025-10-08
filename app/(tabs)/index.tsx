@@ -1,76 +1,370 @@
-import React from "react";
-import { StyleSheet, Image, FlatList, Button } from "react-native";
-import { useNavigation, DrawerActions } from "@react-navigation/native";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Frame } from "@/components/card";
+import React, { useState, useRef } from "react";
+import { 
+  View, 
+  Text, 
+  FlatList, 
+  Image, 
+  TouchableOpacity, 
+  SafeAreaView,
+  StatusBar,
+  RefreshControl,
+  Animated,
+  Dimensions,
+  ScrollView,
+  TextInput
+} from "react-native";
+import { Ionicons } from '@expo/vector-icons';
 
-const news = [
-  {
-    id: "1",
-    title: "Judul Berita 1",
-    content: "Isi berita 1...",
-    image: require("@/assets/images/icon.png"),
-  },
-  {
-    id: "2",
-    title: "Judul Berita 2",
-    content: "Isi berita 2...",
-    image: require("@/assets/images/icon.png"),
-  },
-  {
-    id: "3",
-    title: "Judul Berita 3",
-    content: "Isi berita 3...",
-    image: require("@/assets/images/icon.png"),
-  },
-];
+import { 
+  banners, 
+  leaderboardData,
+  newsData,
+  categories,
+  NewsItem, 
+  Banner, 
+  LeaderboardItem 
+} from "@/assets/prop/indexData";
+import { styles } from "@/assets/styles/indexStyle";
+import { Link } from "expo-router";
+const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
-  const navigation = useNavigation();
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [activeBanner, setActiveBanner] = useState<number>(0);
+  const [timeframe, setTimeframe] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
+  const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
+  const scrollX = useRef(new Animated.Value(0)).current;
+
+  // Filter news berdasarkan kategori (sama seperti di NewsScreen)
+  const filteredNews = selectedCategory === "Semua" 
+    ? newsData 
+    : newsData.filter(item => item.category === selectedCategory);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  };
+
+  const renderBannerItem = ({ item, index }: { item: Banner; index: number }) => {
+    const inputRange = [
+      (index - 1) * width,
+      index * width,
+      (index + 1) * width,
+    ];
+
+    const scale = scrollX.interpolate({
+      inputRange,
+      outputRange: [0.9, 1, 0.9],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <Animated.View style={[styles.bannerItem, { transform: [{ scale }] }]}>
+        <Image source={typeof item.image === 'string' ? { uri: item.image } : item.image} style={styles.bannerImage}/>
+        <View style={styles.bannerOverlay}>
+          <Text style={styles.bannerCategory}>{item.category}</Text>
+          <Text style={styles.bannerTitle}>{item.title}</Text>
+          <TouchableOpacity style={styles.readButton}>
+            <Text style={styles.readButtonText}>Baca Sekarang</Text>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
+    );
+  };
+
+  // Filter Kategori untuk Featured News
+  const renderCategoryChip = ({ item }: { item: string }) => (
+    <TouchableOpacity
+      style={[
+        styles.chip,
+        selectedCategory === item && styles.chipSelected
+      ]}
+      onPress={() => setSelectedCategory(item)}
+    >
+      <Text style={[
+        styles.chipText,
+        selectedCategory === item && styles.chipTextSelected
+      ]}>
+        {item}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  // Render Item Featured News (sama seperti di NewsScreen)
+  const renderFeaturedItem = ({ item }: { item: NewsItem }) => {
+    const scaleValue = new Animated.Value(1);
+    
+    const onPressIn = () => {
+      Animated.spring(scaleValue, {
+        toValue: 0.95,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    const onPressOut = () => {
+      Animated.spring(scaleValue, {
+        toValue: 1,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    const handlePress = () => {
+      console.log('Featured news pressed:', item.title);
+      // Navigate to news detail
+    };
+
+    return (
+      <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
+        <TouchableOpacity 
+          style={styles.featuredCard}
+          onPressIn={onPressIn}
+          onPressOut={onPressOut}
+          onPress={handlePress}
+          activeOpacity={0.9}
+        >
+          <View style={styles.featuredImageContainer}>
+            <Image 
+              source={typeof item.image === 'string' ? { uri: item.image } : item.image} 
+              style={styles.featuredImage}
+            />
+            <View style={styles.featuredCategoryBadge}>
+              <Text style={styles.featuredCategoryText}>{item.category}</Text>
+            </View>
+          </View>
+          
+          <View style={styles.featuredContent}>
+            <Text style={styles.featuredNewsTitle}>{item.title}</Text>
+            <Text style={styles.featuredNewsDesc} numberOfLines={2}>
+              {item.description}
+            </Text>
+            
+            <View style={styles.featuredMetaContainer}>
+              <Text style={styles.featuredDate}>{item.date}</Text>
+              <Text style={styles.featuredReadTime}>• {item.readTime}</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
+
+  const renderLeaderboardItem = ({ item, index }: { item: LeaderboardItem; index: number }) => {
+    const isLastItem = index === leaderboardData.length - 1;
+    
+    const getRankStyle = () => {
+      switch (item.rank) {
+        case 1: return styles.rankNumber1;
+        case 2: return styles.rankNumber2;
+        case 3: return styles.rankNumber3;
+        default: return styles.rankNumber;
+      }
+    };
+
+    const getAvatarStyle = () => {
+      return item.rank <= 3 ? [styles.avatar, styles.avatarTop3] : styles.avatar;
+    };
+
+    const getChangeStyle = () => {
+      switch (item.change) {
+        case 'up': return styles.changeUp;
+        case 'down': return styles.changeDown;
+        case 'same': return styles.changeSame;
+        default: return styles.changeSame;
+      }
+    };
+
+    const getChangeTextStyle = () => {
+      switch (item.change) {
+        case 'up': return styles.changeTextUp;
+        case 'down': return styles.changeTextDown;
+        case 'same': return styles.changeTextSame;
+        default: return styles.changeTextSame;
+      }
+    };
+
+    const getChangeIcon = () => {
+      switch (item.change) {
+        case 'up': return "caret-up";
+        case 'down': return "caret-down";
+        case 'same': return "remove";
+        default: return "remove";
+      }
+    };
+
+    const getChangeText = () => {
+      if (item.change === 'same') return "Same";
+      return item.changeAmount?.toString() || "0";
+    };
+
+    return (
+      <View style={[styles.leaderboardItem, isLastItem && styles.leaderboardItemLast]}>
+        <View style={styles.rankContainer}>
+          <Text style={getRankStyle()}>{item.rank}</Text>
+        </View>
+
+
+        
+        <Image source={typeof item.avatar === 'string' ? {uri: item.avatar} : item.avatar} style={getAvatarStyle()} />
+        
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>{item.name}</Text>
+          <Text style={styles.userPoints}>{item.points.toLocaleString()} Terjual</Text>
+        </View>
+        
+        <View style={getChangeStyle()}>
+          <Ionicons 
+            name={getChangeIcon() as any} 
+            size={12} 
+            color={getChangeTextStyle().color} 
+          />
+          <Text style={[styles.changeText, getChangeTextStyle()]}>
+            {getChangeText()}
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
+  const FeaturedNewsSection = () => (
+    <View style={styles.featuredContainer}>
+      <View style={styles.featuredHeader}>
+        <Text style={styles.featuredTitle}>Berita Terkini</Text>
+        <TouchableOpacity>
+          <Link href="/news">
+            <Text style={styles.seeAllText}>Lihat Semua</Text>
+          </Link>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.categoriesSection}>
+        <FlatList
+          data={categories}
+          renderItem={renderCategoryChip}
+          keyExtractor={(item: string) => item}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipsContainer}
+        />
+      </View>
+
+      <FlatList
+        data={filteredNews}
+        renderItem={renderFeaturedItem}
+        keyExtractor={(item: NewsItem) => item.id}
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={false}
+        contentContainerStyle={styles.featuredListContainer}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>Tidak ada berita untuk kategori ini</Text>
+          </View>
+        }
+      />
+    </View>
+  );
+
+  const LeaderboardSection = () => (
+    <View style={styles.section}>
+      <View style={styles.leaderboardCard}>
+        <View style={styles.leaderboardHeader}>
+          <View style={styles.leaderboardTitleContainer}>
+            <Text style={styles.leaderboardTitle}> Penjualan Leaderboard Terkini</Text>
+          </View>
+        </View>
+
+        <FlatList
+          data={leaderboardData}
+          renderItem={renderLeaderboardItem}
+          keyExtractor={(item) => item.id}
+          scrollEnabled={false}
+        />
+      </View>
+    </View>
+  );
 
   return (
-    <FlatList
-      data={news}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => (
-        <Frame title={item.title} content={item.content} image={item.image} />
-      )}
-      ListHeaderComponent={
-        <>
-          {/* Header gambar */}
-          <Image
-            source={require("@/assets/images/android-icon-background.png")}
-            style={styles.headerImage}
-          />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.greeting}>Selamat Pagi! 👋</Text>
+          <Text style={styles.subtitle}>Apa yang ingin kamu baca hari ini?</Text>
+        </View>
+        <TouchableOpacity style={styles.notificationButton}>
+          <Ionicons name="notifications-outline" size={24} color="#333" />
+          <View style={styles.notificationBadge} />
+        </TouchableOpacity>
+      </View>
 
-          {/* Judul */}
-          <ThemedView style={styles.titleContainer}>
-            <ThemedText type="title">Smart Hidroponik Selada</ThemedText>
-            <ThemedText type="subtitle">Berita & Informasi</ThemedText>
-          </ThemedView>
-        </>
-      }
-      contentContainerStyle={styles.container}
-    />
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={20} color="#999" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Cari berita..."
+          placeholderTextColor="#999"
+        />
+      </View>
+
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#0B2B26"]}
+            tintColor="#0B2B26"
+          />
+        }
+      >
+        {/* Banner Carousel */}
+        <View style={styles.bannerSection}>
+          <Animated.FlatList
+            data={banners}
+            renderItem={renderBannerItem}
+            keyExtractor={(item) => item.id}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+              { useNativeDriver: false }
+            )}
+            scrollEventThrottle={16}
+          />
+          <View style={styles.bannerPagination}>
+            {banners.map((_, index) => {
+              const opacity = scrollX.interpolate({
+                inputRange: [
+                  (index - 1) * width,
+                  index * width,
+                  (index + 1) * width,
+                ],
+                outputRange: [0.3, 1, 0.3],
+                extrapolate: 'clamp',
+              });
+
+              return (
+                <Animated.View
+                  key={index}
+                  style={[styles.paginationDot, { opacity }]}
+                />
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Featured News - Menggunakan data yang sama dengan NewsScreen */}
+        <FeaturedNewsSection />
+
+        {/* Leaderboard */}
+        <LeaderboardSection />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    paddingBottom: 20,
-  },
-  menuContainer: {
-    padding: 10,
-    alignItems: "flex-start",
-  },
-  headerImage: {
-    width: "100%",
-    height: 200,
-    resizeMode: "cover",
-  },
-  titleContainer: {
-    padding: 16,
-    alignItems: "center",
-  },                   
-});

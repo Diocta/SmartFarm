@@ -1,76 +1,140 @@
-import React from "react";
-import { StyleSheet, Image, FlatList, Button } from "react-native";
-import { useNavigation, DrawerActions } from "@react-navigation/native";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Frame } from "@/components/card";
+import React, { useState } from "react";
+import { 
+  View, 
+  Text, 
+  FlatList, 
+  Image, 
+  TouchableOpacity, 
+  StatusBar,
+  RefreshControl,
+  Animated,
+  ListRenderItem
+} from "react-native";
+import { styles } from "@/assets/styles/newsStyle";
+import { newsData, categories, NewsItem, width } from "@/assets/prop/newsData";
 
-const news = [
-  {
-    id: "1",
-    title: "Judul Berita 1",
-    content: "Isi berita 1...",
-    image: require("@/assets/images/icon.png"),
-  },
-  {
-    id: "2",
-    title: "Judul Berita 2",
-    content: "Isi berita 2...",
-    image: require("@/assets/images/icon.png"),
-  },
-  {
-    id: "3",
-    title: "Judul Berita 3",
-    content: "Isi berita 3...",
-    image: require("@/assets/images/icon.png"),
-  },
-];
+export default function NewsScreen() {
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
 
-export default function HomeScreen() {
-  const navigation = useNavigation();
+  const filteredNews = selectedCategory === "Semua" 
+    ? newsData 
+    : newsData.filter(item => item.category === selectedCategory);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    // Simulate API call
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  };
+
+  // Filter Kategori
+  const renderCategoryChip = ({ item }: { item: string }) => (
+    <TouchableOpacity
+      style={[
+        styles.chip,
+        selectedCategory === item && styles.chipSelected
+      ]}
+      onPress={() => setSelectedCategory(item)}
+    >
+      <Text style={[
+        styles.chipText,
+        selectedCategory === item && styles.chipTextSelected
+      ]}>
+        {item}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  const renderItem: ListRenderItem<NewsItem> = ({ item, index }) => {
+    const scaleValue = new Animated.Value(1);
+    
+    const onPressIn = () => {
+      Animated.spring(scaleValue, {
+        toValue: 0.95,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    const onPressOut = () => {
+      Animated.spring(scaleValue, {
+        toValue: 1,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    return (
+      <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
+        <TouchableOpacity 
+          style={styles.card}
+          onPressIn={onPressIn}
+          onPressOut={onPressOut}
+          activeOpacity={0.9}
+        >
+          <View style={styles.imageContainer}>
+            <Image source={typeof item.image === 'string' ? { uri: item.image } : item.image} style={styles.image}/>
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryText}>{item.category}</Text>
+            </View>
+          </View>
+          
+          <View style={styles.content}>
+            <Text style={styles.title}>{item.title}</Text>
+            <Text style={styles.desc} numberOfLines={2}>
+              {item.description}
+            </Text>
+            
+            <View style={styles.metaContainer}>
+              <Text style={styles.date}>{item.date}</Text>
+              <Text style={styles.readTime}>• {item.readTime}</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
 
   return (
-    <FlatList
-      data={news}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => (
-        <Frame title={item.title} content={item.content} image={item.image} />
-      )}
-      ListHeaderComponent={
-        <>
-          {/* Header gambar */}
-          <Image
-            source={require("@/assets/images/android-icon-background.png")}
-            style={styles.headerImage}
-          />
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Berita Terkini</Text>
+        <Text style={styles.headerSubtitle}>Update terbaru seputar teknologi</Text>
+      </View>
 
-          {/* Judul */}
-          <ThemedView style={styles.titleContainer}>
-            <ThemedText type="title">Smart Hidroponik Selada</ThemedText>
-            <ThemedText type="subtitle">Berita & Informasi</ThemedText>
-          </ThemedView>
-        </>
-      }
-      contentContainerStyle={styles.container}
-    />
+      <View style={styles.categoriesSection}>
+        <FlatList
+          data={categories}
+          renderItem={renderCategoryChip}
+          keyExtractor={(item: string) => item}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipsContainer}
+        />
+      </View>
+
+      <FlatList
+        data={filteredNews}
+        renderItem={renderItem}
+        keyExtractor={(item: NewsItem) => item.id}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#12372A"]}
+            tintColor="#12372A"
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>Tidak ada berita untuk kategori ini</Text>
+          </View>
+        }
+      />
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    paddingBottom: 20,
-  },
-  menuContainer: {
-    padding: 10,
-    alignItems: "flex-start",
-  },
-  headerImage: {
-    width: "100%",
-    height: 200,
-    resizeMode: "cover",
-  },
-  titleContainer: {
-    padding: 16,
-    alignItems: "center",
-  },                   
-});
