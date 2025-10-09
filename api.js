@@ -3,7 +3,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage"; 
 
 const API = axios.create({
-  baseURL: "http://10.69.4.56:5000/api",
+  baseURL: "http://10.218.22.191:5000/api",
 });
 
 // Middleware: kalau ada token, otomatis kirim ke backend

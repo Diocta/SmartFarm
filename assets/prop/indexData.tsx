@@ -27,7 +27,7 @@ export const banners: Banner[] = [
   {
     id: "1",
     title: "Teknologi Terbaru 2025",
-    image: require("@/assets/images/tekonologiBaru.jpg"),
+    image: require("@/assets/images/teknologiBaru.jpg"),
     category: "Teknologi"
   },
   {
