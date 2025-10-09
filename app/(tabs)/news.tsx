@@ -34,7 +34,7 @@ export default function NewsScreen() {
   // Navigasi ke detail berita
   const navigateToDetail = (newsItem: NewsItem) => {
     router.push({
-      pathname: "/(tabs)/NewsDetailScreen",
+      pathname: "/NewsDetailScreen",
       params: { 
         id: newsItem.id,
         title: newsItem.title,

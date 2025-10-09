@@ -8,7 +8,7 @@ import { Text, View, Button } from "react-native";
 
 // Import screens - sesuaikan path dengan project Anda
 import NewsScreen from "@/app/(tabs)/news";
-import NewsDetailScreen from "@/app/(tabs)/NewsDetailScreen";
+import NewsDetailScreen from "@/app/NewsDetailScreen";
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
