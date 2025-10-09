@@ -1,5 +1,4 @@
-import { Drawer } from "expo-router/drawer";
-import { Stack } from "expo-router";
+import { Stack, Slot } from "expo-router";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, ActivityIndicator } from "react-native";
@@ -38,19 +37,10 @@ export default function Layout() {
         <Stack.Screen name="auth/welcome" />
         <Stack.Screen name="auth/login" />
         <Stack.Screen name="auth/register" />
-        <Stack.Screen name="(tabs)" />
       </Stack>
     );
   }
 
-  // Kalau sudah login → masuk ke (tabs)
-  return (
-    <Drawer>
-      <Drawer.Screen name="index" options={{ title: "Beranda" }} />
-      <Drawer.Screen name="explore" options={{ title: "Explore" }} />
-      <Drawer.Screen name="screens/profile" options={{ title: "Profile" }} />
-      <Drawer.Screen name="screens/data" options={{ title: "Data" }} />
-      <Drawer.Screen name="screens/news" options={{ title: "News" }} />
-    </Drawer>
-  );
+  // Kalau sudah login → langsung ke (tabs)
+  return <Slot />;
 }
