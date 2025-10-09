@@ -1,13 +1,15 @@
-// frontend/app/auth/login.tsx
 import { View, Text, TextInput, TouchableOpacity, Image, Alert } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import Svg, { Path } from "react-native-svg"; 
+import Svg, { Path } from "react-native-svg";
 import styles from "../../assets/styles/loginStyle";
-import API from "../../api";  
-import AsyncStorage from "@react-native-async-storage/async-storage"; 
+import API from "../../api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+// import logo Google
+const GoogleLogo = require("../../assets/images/google.png");
 
 export default function Login() {
   const router = useRouter();
@@ -24,15 +26,19 @@ export default function Login() {
       const res = await API.post("/auth/login", { email, password });
       const { token, user } = res.data;
 
-      // ✅ simpan token ke AsyncStorage
       await AsyncStorage.setItem("token", token.toString());
-
       Alert.alert("Sukses", `Selamat datang ${user.username}`);
-      router.replace("/(tabs)"); // masuk ke halaman utama
+      router.replace("/(tabs)");
     } catch (err: any) {
       console.error("Login error:", err);
       Alert.alert("Login gagal", err.response?.data?.message || "Terjadi kesalahan");
     }
+  };
+
+  const handleGoogleLogin = () => {
+    // nanti bisa dihubungkan ke Google Auth (contoh: expo-auth-session)
+    console.log("Google Login clicked");
+    Alert.alert("Info", "Login dengan Google belum diaktifkan");
   };
 
   return (
@@ -100,6 +106,19 @@ export default function Login() {
       {/* LOGIN BUTTON */}
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Login</Text>
+      </TouchableOpacity>
+
+      {/* OR CONTINUE WITH */}
+      <View style={styles.dividerWrapper}>
+        <View style={styles.line} />
+        <Text style={styles.dividerText}>Or Continue With</Text>
+        <View style={styles.line} />
+      </View>
+
+      {/* GOOGLE BUTTON */}
+      <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+        <Image source={GoogleLogo} style={styles.googleIcon} />
+        <Text style={styles.googleText}>Continue with Google</Text>
       </TouchableOpacity>
 
       {/* FOOTER */}

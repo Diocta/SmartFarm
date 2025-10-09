@@ -79,7 +79,8 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 30,
     alignItems: "center",
-    margin: 30,
+    marginLeft: 30,
+    marginRight: 30,
   },
   buttonText: {
     color: "#fff",
@@ -87,10 +88,51 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
+  // ✅ Disamakan dengan style register
+  dividerWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 20,
+    justifyContent: "center",
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#8EB69B",
+    
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    color: "#051F20",
+    fontSize: 14,
+  },
+  googleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    paddingVertical: 12,
+    borderRadius: 25,
+    marginHorizontal: 30,
+    marginBottom: 20,
+    backgroundColor: "transparent",
+  },
+  googleIcon: {
+    width: 22,
+    height: 22,
+    marginRight: 10,
+  },
+  googleText: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#0B2B26",
+  },
+
   footer: {
     textAlign: "center",
     fontSize: 14,
-    color: "#235247",
+    color: "#051F20",
   },
 });
 
