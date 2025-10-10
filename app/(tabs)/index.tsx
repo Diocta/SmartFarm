@@ -1,3 +1,4 @@
+// app/(tabs)/index.tsx
 import React, { useState, useRef } from "react";
 import { 
   View, 
@@ -11,9 +12,11 @@ import {
   Animated,
   Dimensions,
   ScrollView,
-  TextInput
+  TextInput,
+  ListRenderItem
 } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from "expo-router";
 
 import { 
   banners, 
@@ -26,9 +29,11 @@ import {
 } from "@/assets/prop/indexData";
 import { styles } from "@/assets/styles/indexStyle";
 import { Link } from "expo-router";
+
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [activeBanner, setActiveBanner] = useState<number>(0);
   const [timeframe, setTimeframe] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
@@ -45,6 +50,50 @@ export default function HomeScreen() {
     setTimeout(() => {
       setRefreshing(false);
     }, 2000);
+  };
+
+  // ✅ NAVIGASI PERSIS SEPERTI DI NEWSCREEN
+  const navigateToDetail = (newsItem: NewsItem) => {
+    router.push({
+      pathname: "/NewsDetailScreen",
+      params: { 
+        id: newsItem.id,
+        title: newsItem.title,
+        description: newsItem.description,
+        category: newsItem.category,
+        date: newsItem.date,
+        readTime: newsItem.readTime,
+        author: newsItem.author || 'Admin'
+      }
+    });
+  };
+
+  // ✅ NAVIGASI UNTUK BANNER
+  const navigateBannerToDetail = (bannerItem: Banner) => {
+    // Cari news item yang sesuai dengan banner
+    const relatedNews = newsData.find(item => item.title === bannerItem.title) || {
+      id: `banner-${bannerItem.id}`,
+      title: bannerItem.title,
+      description: bannerItem.description || bannerItem.title,
+      category: bannerItem.category,
+      date: "Terbaru",
+      readTime: "2 min read",
+      author: "Admin",
+      image: bannerItem.image
+    };
+    
+    router.push({
+      pathname: "/NewsDetailScreen",
+      params: { 
+        id: relatedNews.id,
+        title: relatedNews.title,
+        description: relatedNews.description,
+        category: relatedNews.category,
+        date: relatedNews.date,
+        readTime: relatedNews.readTime,
+        author: relatedNews.author
+      }
+    });
   };
 
   const renderBannerItem = ({ item, index }: { item: Banner; index: number }) => {
@@ -66,7 +115,11 @@ export default function HomeScreen() {
         <View style={styles.bannerOverlay}>
           <Text style={styles.bannerCategory}>{item.category}</Text>
           <Text style={styles.bannerTitle}>{item.title}</Text>
-          <TouchableOpacity style={styles.readButton}>
+          {/* ✅ TAMBAHKAN NAVIGASI */}
+          <TouchableOpacity 
+            style={styles.readButton}
+            onPress={() => navigateBannerToDetail(item)}
+          >
             <Text style={styles.readButtonText}>Baca Sekarang</Text>
           </TouchableOpacity>
         </View>
@@ -74,7 +127,7 @@ export default function HomeScreen() {
     );
   };
 
-  // Filter Kategori untuk Featured News
+  // ✅ FILTER KATEGORI PERSIS SEPERTI DI NEWSCREEN
   const renderCategoryChip = ({ item }: { item: string }) => (
     <TouchableOpacity
       style={[
@@ -92,8 +145,8 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
-  // Render Item Featured News (sama seperti di NewsScreen)
-  const renderFeaturedItem = ({ item }: { item: NewsItem }) => {
+  // ✅ RENDER FEATURED ITEM DENGAN ANIMASI PERSIS SEPERTI DI NEWSCREEN
+  const renderFeaturedItem: ListRenderItem<NewsItem> = ({ item, index }) => {
     const scaleValue = new Animated.Value(1);
     
     const onPressIn = () => {
@@ -110,19 +163,14 @@ export default function HomeScreen() {
       }).start();
     };
 
-    const handlePress = () => {
-      console.log('Featured news pressed:', item.title);
-      // Navigate to news detail
-    };
-
     return (
       <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
         <TouchableOpacity 
           style={styles.featuredCard}
           onPressIn={onPressIn}
           onPressOut={onPressOut}
-          onPress={handlePress}
           activeOpacity={0.9}
+          onPress={() => navigateToDetail(item)} // ✅ NAVIGASI PERSIS SEPERTI DI NEWS
         >
           <View style={styles.featuredImageContainer}>
             <Image 
@@ -204,8 +252,6 @@ export default function HomeScreen() {
           <Text style={getRankStyle()}>{item.rank}</Text>
         </View>
 
-
-        
         <Image source={typeof item.avatar === 'string' ? {uri: item.avatar} : item.avatar} style={getAvatarStyle()} />
         
         <View style={styles.userInfo}>
@@ -232,12 +278,13 @@ export default function HomeScreen() {
       <View style={styles.featuredHeader}>
         <Text style={styles.featuredTitle}>Berita Terkini</Text>
         <TouchableOpacity>
-          <Link href="/news">
+          <Link href="/(tabs)/news">
             <Text style={styles.seeAllText}>Lihat Semua</Text>
           </Link>
         </TouchableOpacity>
       </View>
 
+      {/* ✅ KATEGORI FILTER PERSIS SEPERTI DI NEWSCREEN */}
       <View style={styles.categoriesSection}>
         <FlatList
           data={categories}
@@ -249,6 +296,7 @@ export default function HomeScreen() {
         />
       </View>
 
+      {/* ✅ LIST BERITA DENGAN REFRESH CONTROL */}
       <FlatList
         data={filteredNews}
         renderItem={renderFeaturedItem}
@@ -256,6 +304,14 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         scrollEnabled={false}
         contentContainerStyle={styles.featuredListContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#12372A"]}
+            tintColor="#12372A"
+          />
+        }
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateText}>Tidak ada berita untuk kategori ini</Text>
@@ -359,7 +415,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Featured News - Menggunakan data yang sama dengan NewsScreen */}
+        {/* Featured News - ✅ SEKARANG PERSIS SEPERTI DI NEWSCREEN */}
         <FeaturedNewsSection />
 
         {/* Leaderboard */}

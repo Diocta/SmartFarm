@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#DAF1DE",
   },
 
   headerContainer: {
@@ -27,54 +27,57 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 40,
+    fontSize: 50,
     fontWeight: "bold",
-    color: "#12372A",
+    color: "#0B2B26",
     marginBottom: 5,
     textAlign: "center",
   },
   subtitle: {
     fontSize: 14,
-    color: "#666",
-    marginBottom: 20,
+    color: "#051F20",
+    opacity: 0.5,
+    marginBottom: 50,
     textAlign: "center",
   },
 
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#DAF1DE",
+    backgroundColor: "#8EB69B",
     borderRadius: 15,
     paddingHorizontal: 12,
-    margin: 15,
-  },
-  icon: {
-    marginRight: 8,
+    marginLeft: 30,
+    marginRight: 30,
+    marginBottom: 15,
   },
   input: {
     flex: 1,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: "#12372A",
+    padding: 12,
+    marginLeft: 8,
+    color: "#0B2B26",
   },
 
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 15,
+    marginHorizontal: 25,
   },
   link: {
-    color: "#3B7D3A",
+    color: "#235247",
     fontWeight: "500",
-    margin: 15,
+    marginBottom: 25,
+    marginHorizontal: 15,
   },
 
   button: {
-    backgroundColor: "#12372A",
+    backgroundColor: "#0B2B26",
     padding: 15,
     borderRadius: 30,
     alignItems: "center",
-    margin: 15,
+    marginLeft: 30,
+    marginRight: 30,
   },
   buttonText: {
     color: "#fff",
@@ -82,10 +85,51 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
+  // ✅ Diperbaiki agar sejajar dengan input dan tombol
+  dividerWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 20,
+    marginHorizontal: 30, // <-- tambahkan ini biar sama dengan input & login
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#8EB69B",
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    color: "#051F20",
+    fontSize: 14,
+  },
+
+  googleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    paddingVertical: 12,
+    borderRadius: 25,
+    marginHorizontal: 30,
+    marginBottom: 20,
+    backgroundColor: "transparent",
+  },
+  googleIcon: {
+    width: 22,
+    height: 22,
+    marginRight: 10,
+  },
+  googleText: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#0B2B26",
+  },
+
   footer: {
     textAlign: "center",
     fontSize: 14,
-    color: "#666",
+    color: "#051F20",
   },
 });
 

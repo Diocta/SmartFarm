@@ -1,32 +1,53 @@
-import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, Alert } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import Svg, { Path } from "react-native-svg"; // ✅ untuk lekukan
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import Svg, { Path } from "react-native-svg";
 import styles from "../../assets/styles/loginStyle";
+import API from "../../api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const GoogleLogo = require("../../assets/images/google.png");
 
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
-  const handleLogin = () => {
-    if (email && password) {
-      router.replace("/(tabs)");
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Email dan password harus diisi");
+      return;
     }
+
+    try {
+      const res = await API.post("/auth/login", { email, password });
+      const { token, user } = res.data;
+
+      await AsyncStorage.setItem("token", token.toString());
+      Alert.alert("Sukses", `Selamat datang ${user.username}`);
+      router.replace("/(tabs)");
+    } catch (err: any) {
+      console.error("Login error:", err);
+      Alert.alert("Login gagal", err.response?.data?.message || "Terjadi kesalahan");
+    }
+  };
+
+  const handleGoogleLogin = () => {
+    console.log("Google Login clicked");
+    Alert.alert("Info", "Login dengan Google belum diaktifkan");
   };
 
   return (
     <View style={styles.container}>
-      {/* HEADER dengan gambar + lekukan */}
+      {/* HEADER */}
       <View style={styles.headerContainer}>
         <Image
           source={require("../../assets/images/headerlogin.png")}
           style={styles.headerImage}
           resizeMode="cover"
         />
-        {/* Lekukan putih */}
         <Svg
           height="100"
           width="100%"
@@ -40,7 +61,7 @@ export default function Login() {
                906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,
                214.34,3V0H0V27.35A600.21,600.21,0,
                0,0,321.39,56.44Z"
-            fill="#fff"
+            fill="#DAF1DE"
             transform="scale(1, -1) translate(0, -120)"
           />
         </Svg>
@@ -83,6 +104,19 @@ export default function Login() {
       {/* LOGIN BUTTON */}
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Login</Text>
+      </TouchableOpacity>
+
+      {/* OR CONTINUE WITH */}
+      <View style={styles.dividerWrapper}>
+        <View style={styles.line} />
+        <Text style={styles.dividerText}>Or Continue With</Text>
+        <View style={styles.line} />
+      </View>
+
+      {/* GOOGLE BUTTON */}
+      <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+        <Image source={GoogleLogo} style={styles.googleIcon} />
+        <Text style={styles.googleText}>Continue with Google</Text>
       </TouchableOpacity>
 
       {/* FOOTER */}

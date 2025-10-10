@@ -10,6 +10,7 @@ export type Banner = {
   title: string;
   image: string;
   category: string;
+  description: string;
 };
 
 export type LeaderboardItem = {
@@ -27,20 +28,23 @@ export const banners: Banner[] = [
   {
     id: "1",
     title: "Teknologi Terbaru 2025",
-    image: require("@/assets/images/tekonologiBaru.jpg"),
-    category: "Teknologi"
+    image: require("@/assets/images/teknologiBaru.jpg"),
+    category: "Teknologi",
+    description: "Jelajahi inovasi teknologi terbaru yang akan mengubah dunia di tahun 2025."
   },
   {
     id: "2",
     title: "Inovasi Energi Hijau",
     image: require("@/assets/images/energiHijau.jpg"),
-    category: "Energi"
+    category: "Energi",
+    description: "Energi terbarukan semakin penting untuk masa depan planet kita."
   },
   {
     id: "3",
     title: "Breakthrough in Medicine",
     image: require("@/assets/images/kesehatan.jpg"),
-    category: "Kesehatan"
+    category: "Kesehatan",
+    description: "Penemuan medis terbaru yang menjanjikan harapan baru bagi pasien di seluruh dunia."
   }
 ];
 

@@ -1,6 +1,4 @@
-// app/_layout.tsx
-import { Drawer } from "expo-router/drawer";
-import { Stack } from "expo-router";
+import { Stack, Slot } from "expo-router";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, ActivityIndicator } from "react-native";
@@ -10,7 +8,6 @@ export default function Layout() {
   const [isSplashDone, setIsSplashDone] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
 
   useEffect(() => {
     const checkLogin = async () => {
@@ -33,10 +30,10 @@ export default function Layout() {
     );
   }
 
+  // Kalau belum login → auth stack
   if (!isLoggedIn) {
-    // Kalau belum login → tampilkan welcome + auth
     return (
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
         <Stack.Screen name="auth/welcome" />
         <Stack.Screen name="auth/login" />
         <Stack.Screen name="auth/register" />
@@ -44,14 +41,6 @@ export default function Layout() {
     );
   }
 
-  // Kalau sudah login → tampilkan drawer
-  return (
-    <Drawer>
-      <Drawer.Screen name="index" options={{ title: "Beranda" }} />
-      <Drawer.Screen name="explore" options={{ title: "Explore" }} />
-      <Drawer.Screen name="screens/profile" options={{ title: "Profile" }} />
-      <Drawer.Screen name="screens/data" options={{ title: "Data" }} />
-      <Drawer.Screen name="screens/news" options={{ title: "News" }} />
-    </Drawer>
-  );
+  // Kalau sudah login → langsung ke (tabs)
+  return <Slot />;
 }

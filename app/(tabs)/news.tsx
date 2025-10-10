@@ -1,3 +1,4 @@
+// app/(tabs)/news.tsx
 import React, { useState } from "react";
 import { 
   View, 
@@ -10,10 +11,12 @@ import {
   Animated,
   ListRenderItem
 } from "react-native";
+import { useRouter } from "expo-router";
 import { styles } from "@/assets/styles/newsStyle";
-import { newsData, categories, NewsItem, width } from "@/assets/prop/newsData";
+import { newsData, categories, NewsItem } from "@/assets/prop/newsData";
 
 export default function NewsScreen() {
+  const router = useRouter();
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
 
@@ -23,10 +26,25 @@ export default function NewsScreen() {
 
   const onRefresh = () => {
     setRefreshing(true);
-    // Simulate API call
     setTimeout(() => {
       setRefreshing(false);
     }, 2000);
+  };
+
+  // Navigasi ke detail berita
+  const navigateToDetail = (newsItem: NewsItem) => {
+    router.push({
+      pathname: "/NewsDetailScreen",
+      params: { 
+        id: newsItem.id,
+        title: newsItem.title,
+        description: newsItem.description,
+        category: newsItem.category,
+        date: newsItem.date,
+        readTime: newsItem.readTime,
+        author: newsItem.author || 'Admin'
+      }
+    });
   };
 
   // Filter Kategori
@@ -71,9 +89,13 @@ export default function NewsScreen() {
           onPressIn={onPressIn}
           onPressOut={onPressOut}
           activeOpacity={0.9}
+          onPress={() => navigateToDetail(item)}
         >
           <View style={styles.imageContainer}>
-            <Image source={typeof item.image === 'string' ? { uri: item.image } : item.image} style={styles.image}/>
+            <Image 
+              source={typeof item.image === 'string' ? { uri: item.image } : item.image} 
+              style={styles.image}
+            />
             <View style={styles.categoryBadge}>
               <Text style={styles.categoryText}>{item.category}</Text>
             </View>
@@ -99,11 +121,6 @@ export default function NewsScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Berita Terkini</Text>
-        <Text style={styles.headerSubtitle}>Update terbaru seputar teknologi</Text>
-      </View>
-
       <View style={styles.categoriesSection}>
         <FlatList
           data={categories}
