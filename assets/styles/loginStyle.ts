@@ -51,9 +51,6 @@ const styles = StyleSheet.create({
     marginRight: 30,
     marginBottom: 15,
   },
-  icon: {
-    marginRight: 8,
-  },
   input: {
     flex: 1,
     padding: 12,
@@ -88,24 +85,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
-  // ✅ Disamakan dengan style register
+  // ✅ Diperbaiki agar sejajar dengan input dan tombol
   dividerWrapper: {
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 20,
-    justifyContent: "center",
+    marginHorizontal: 30, // <-- tambahkan ini biar sama dengan input & login
   },
   line: {
     flex: 1,
     height: 1,
     backgroundColor: "#8EB69B",
-    
   },
   dividerText: {
     marginHorizontal: 10,
     color: "#051F20",
     fontSize: 14,
   },
+
   googleButton: {
     flexDirection: "row",
     alignItems: "center",

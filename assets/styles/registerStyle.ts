@@ -21,8 +21,10 @@ const styles = StyleSheet.create({
     marginBottom: 75,
     textAlign: "center",
   },
+
   inputWrapper: {
     marginBottom: 15,
+    marginHorizontal: 10, // ✅ biar sejajar dengan tombol dan divider
   },
   inputRow: {
     flexDirection: "row",
@@ -36,6 +38,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginLeft: 8,
   },
+
   button: {
     backgroundColor: "#0B2B26",
     padding: 15,
@@ -43,16 +46,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 15,
     marginBottom: 15,
+    marginHorizontal: 10, // ✅ sejajar
   },
   buttonText: {
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
   },
+
   dividerWrapper: {
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 20,
+    marginHorizontal: 10, // ✅ ditambahkan agar sejajar dengan input/button
   },
   line: {
     flex: 1,
@@ -64,6 +70,7 @@ const styles = StyleSheet.create({
     color: "#051F20",
     fontSize: 14,
   },
+
   googleButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -73,6 +80,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 25,
     marginBottom: 20,
+    marginHorizontal: 10, // ✅ sejajar
+    backgroundColor: "transparent",
   },
   googleIcon: {
     width: 22,
@@ -84,6 +93,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#0B2B26",
   },
+
   footer: {
     textAlign: "center",
     fontSize: 14,

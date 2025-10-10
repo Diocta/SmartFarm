@@ -8,7 +8,6 @@ import styles from "../../assets/styles/loginStyle";
 import API from "../../api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// import logo Google
 const GoogleLogo = require("../../assets/images/google.png");
 
 export default function Login() {
@@ -36,14 +35,13 @@ export default function Login() {
   };
 
   const handleGoogleLogin = () => {
-    // nanti bisa dihubungkan ke Google Auth (contoh: expo-auth-session)
     console.log("Google Login clicked");
     Alert.alert("Info", "Login dengan Google belum diaktifkan");
   };
 
   return (
     <View style={styles.container}>
-      {/* HEADER dengan gambar + lekukan */}
+      {/* HEADER */}
       <View style={styles.headerContainer}>
         <Image
           source={require("../../assets/images/headerlogin.png")}
