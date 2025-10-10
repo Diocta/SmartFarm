@@ -1,4 +1,4 @@
-// IoTDashboard.tsx
+// IoTDashboard.tsx - FIXED STREAMING VERSION
 import { Buffer } from "buffer";
 import mqtt, { MqttClient } from "mqtt";
 import process from "process";
@@ -16,6 +16,7 @@ import {
   View,
 } from "react-native";
 import "react-native-get-random-values";
+import { WebView } from 'react-native-webview'; // TAMBAHKAN INI
 // @ts-ignore
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { styles } from "../../assets/styles/iot-dashboard.styles";
@@ -24,7 +25,7 @@ import { styles } from "../../assets/styles/iot-dashboard.styles";
 (global as any).process = process;
 
 // Backend Configuration
-const BACKEND_URL = "http://10.218.18.16:3000";
+const BACKEND_URL = "http://10.69.4.200:3000";
 
 // Definisikan Tipe Data Tanaman
 interface PlantData {
@@ -33,25 +34,19 @@ interface PlantData {
   standardPhMin: number;
   standardPhMax: number;
   plantingDate: string;
-  hss: number; // Tambahkan field HSS dari backend
+  hss: number;
 }
 
-// Data default / fallback
 const DEFAULT_PLANT_DATA: PlantData = {
   name: "Selada (Lettuce)",
   count: 24,
   standardPhMin: 5.5,
   standardPhMax: 6.5,
   plantingDate: '2025-09-26',
-  hss: 0, // Default HSS
+  hss: 0,
 };
 
-// Regex sederhana untuk validasi format tanggal YYYY-MM-DD
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
-
-// Helper function tidak digunakan lagi - HSS dari backend
-// const calculateHSS = ... (DIHAPUS)
-
 
 const IoTDashboard: React.FC = () => {
   // State Dinamis untuk Data Tanaman
@@ -72,14 +67,15 @@ const IoTDashboard: React.FC = () => {
   const [lastImageUpdate, setLastImageUpdate] = useState<Date | null>(null);
   const [streamUrl, setStreamUrl] = useState<string>("");
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
-  const [esp32camIP, setEsp32camIP] = useState<string>("10.89.200.248"); 
+  const [esp32camIP, setEsp32camIP] = useState<string>("10.69.4.248");
+  const [streamError, setStreamError] = useState<boolean>(false); // TAMBAHAN untuk error handling
+  const [streamLoading, setStreamLoading] = useState<boolean>(false); // Loading state untuk stream
 
   const pumpPhAnimation = useRef(new Animated.Value(pumpPh === "ON" ? 1 : 0)).current;
   const pumpPpmAnimation = useRef(new Animated.Value(pumpPpm === "ON" ? 1 : 0)).current;
   const modeSwitchAnimation = useRef(new Animated.Value(mode === "auto" ? 1 : 0)).current;
 
   // --- Calculated Values ---
-  // HSS diambil langsung dari state plant yang didapat dari backend
   const plantAgeHSS = plant.hss;
   
   const getStandardPPM = (hss: number) => {
@@ -121,17 +117,13 @@ const IoTDashboard: React.FC = () => {
     healthBadgeColor = '#f97316';
   }
 
-
   // --- API/Database Functions ---
-
-  // 1. Ambil data tanaman terbaru dari DB - HSS dihitung di backend
   const fetchPlantData = useCallback(async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/plant-data`);
       const data = await response.json();
 
       if (data.success && data.plant) {
-        // Normalisasi tanggal ke format YYYY-MM-DD
         let normalizedDate = DEFAULT_PLANT_DATA.plantingDate;
         if (data.plant.plantingDate) {
           const rawDate = new Date(data.plant.plantingDate);
@@ -149,10 +141,10 @@ const IoTDashboard: React.FC = () => {
           standardPhMin: Number(data.plant.standardPhMin) || DEFAULT_PLANT_DATA.standardPhMin,
           standardPhMax: Number(data.plant.standardPhMax) || DEFAULT_PLANT_DATA.standardPhMax,
           plantingDate: normalizedDate,
-          hss: Number(data.plant.hss) || 0, // Ambil HSS dari backend
+          hss: Number(data.plant.hss) || 0,
         };
         
-        console.log("📊 Data fetched from backend:", fetchedPlant); // Debug log
+        console.log("📊 Data fetched from backend:", fetchedPlant);
         
         setPlant(fetchedPlant);
         setEditingPlant(fetchedPlant);
@@ -164,15 +156,12 @@ const IoTDashboard: React.FC = () => {
     }
   }, []);
 
-  // 2. Kirim data tanaman yang diubah ke DB
   const updatePlantData = useCallback(async () => {
-    // Validasi sederhana
     if (editingPlant.count <= 0) {
         Alert.alert("Gagal", "Jumlah Unit harus angka positif.");
         return;
     }
     
-    // Validasi tanggal
     if (!DATE_REGEX.test(editingPlant.plantingDate)) {
         Alert.alert("Gagal", "Format Tanggal Tanam harus YYYY-MM-DD yang valid.");
         return;
@@ -206,15 +195,12 @@ const IoTDashboard: React.FC = () => {
     }
   }, [editingPlant]);
 
-  // Fungsi untuk membuka modal edit
   const openEditModal = () => {
     setEditingPlant(plant);
     setIsModalVisible(true);
   };
   
   // --- useEffects ---
-  
-  // Initial fetch untuk data tanaman dan setup MQTT
   useEffect(() => {
     fetchPlantData();
     
@@ -266,7 +252,6 @@ const IoTDashboard: React.FC = () => {
     };
   }, [fetchPlantData]);
 
-  // Auto fetch dari database setiap 10 detik
   useEffect(() => {
     const interval = setInterval(() => {
       if (!isStreaming && isConnected) {
@@ -279,7 +264,6 @@ const IoTDashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, [isStreaming, isConnected, fetchPlantData]);
 
-  // Animasi pumps dan mode
   useEffect(() => {
     Animated.timing(pumpPhAnimation, { toValue: pumpPh === "ON" ? 1 : 0, duration: 300, useNativeDriver: false }).start();
   }, [pumpPh]);
@@ -313,20 +297,29 @@ const IoTDashboard: React.FC = () => {
     }
   };
 
-  const requestNewImage = () => {
-    if (client && isConnected) {
-      setIsLoadingImage(true);
-      client.publish("hydroponic/camera/capture", "REQUEST");
-    }
-  };
+  // HAPUS: requestNewImage function tidak dipakai lagi
 
+  // FIXED: Toggle streaming dengan error handling dan auto-hide loading
   const toggleStreaming = () => {
     if (isStreaming) {
       setStreamUrl("");
       setIsStreaming(false);
+      setStreamError(false);
+      setStreamLoading(false);
     } else {
-      setStreamUrl(`http://${esp32camIP}:81/stream`);
+      // Coba beberapa URL yang umum digunakan ESP32-CAM
+      const url = `http://${esp32camIP}:81/stream`;
+      console.log("🎥 Starting stream from:", url);
+      setStreamUrl(url);
       setIsStreaming(true);
+      setStreamError(false);
+      setStreamLoading(true);
+      
+      // SOLUSI: Auto-hide loading setelah 2 detik (fallback jika onLoad tidak dipanggil)
+      setTimeout(() => {
+        console.log("⏰ Auto-hiding loading overlay after 2 seconds");
+        setStreamLoading(false);
+      }, 2000);
     }
   };
 
@@ -355,7 +348,6 @@ const IoTDashboard: React.FC = () => {
     return date.toLocaleTimeString();
   };
 
-
   // --- Anim Interpolations ---
   const modeSliderTranslate = modeSwitchAnimation.interpolate({ inputRange: [0, 1], outputRange: [2, 20] });
   const modeBackgroundColour = modeSwitchAnimation.interpolate({ inputRange: [0, 1], outputRange: ["#e5e7eb", "#8eb69b"] });
@@ -383,34 +375,30 @@ const IoTDashboard: React.FC = () => {
         </View>
       </View>
 
-      {/* Camera Card */}
+      {/* Camera Card - FIXED VERSION */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>📷 Live Camera Feed</Text>
-          <View style={styles.cameraButtonsRow}>
-            <TouchableOpacity
-              style={[styles.captureButton, styles.streamButton, isStreaming && styles.streamButtonActive]}
-              onPress={toggleStreaming}
-              disabled={!isConnected}
-            >
-              <Icon name={isStreaming ? "video-off" : "video"} size={18} color="#fff" />
-              <Text style={styles.captureButtonText}>
-                {isStreaming ? "Stop" : "Stream"}
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.captureButton, !isConnected && styles.disabledButton]}
-              onPress={requestNewImage}
-              disabled={!isConnected || isLoadingImage}
-            >
-              <Icon name="camera-retake" size={18} color="#fff" />
-              <Text style={styles.captureButtonText}>Capture</Text>
-            </TouchableOpacity>
-          </View>
         </View>
         
         <View style={styles.cameraContainer}>
+          {/* Tombol Stream di dalam card - pojok kanan atas */}
+          <TouchableOpacity
+            style={[
+              styles.streamButtonInside, 
+              isStreaming && styles.streamButtonInsideActive,
+              !isConnected && styles.disabledButton
+            ]}
+            onPress={toggleStreaming}
+            disabled={!isConnected}
+            activeOpacity={0.7}
+          >
+            <Icon name={isStreaming ? "stop" : "play"} size={20} color="#fff" />
+            <Text style={styles.streamButtonInsideText}>
+              {isStreaming ? "Stop" : "Stream"}
+            </Text>
+          </TouchableOpacity>
+
           {isLoadingImage && (
             <View style={styles.loadingOverlay}>
               <ActivityIndicator size="large" color="#8eb69b" />
@@ -418,12 +406,61 @@ const IoTDashboard: React.FC = () => {
             </View>
           )}
           
+          {/* FIXED: Gunakan WebView untuk streaming dengan auto-hide loading */}
           {isStreaming && streamUrl ? (
-            <Image
-              source={{ uri: streamUrl }}
-              style={styles.cameraImage}
-              resizeMode="cover"
-            />
+            <>
+              {streamLoading && (
+                <View style={styles.loadingOverlay}>
+                  <ActivityIndicator size="large" color="#8eb69b" />
+                  <Text style={styles.loadingText}>Loading stream...</Text>
+                </View>
+              )}
+              <WebView
+                source={{ uri: streamUrl }}
+                style={styles.cameraImage}
+                onError={(syntheticEvent) => {
+                  const { nativeEvent } = syntheticEvent;
+                  console.error('WebView error: ', nativeEvent);
+                  setStreamError(true);
+                  setStreamLoading(false);
+                }}
+                onLoad={() => {
+                  console.log("✅ Stream loaded successfully");
+                  setStreamError(false);
+                  setStreamLoading(false);
+                }}
+                onLoadStart={() => {
+                  console.log("⏳ Stream loading...");
+                  // Jangan set loading di sini karena sudah di-set di toggleStreaming
+                }}
+                onLoadEnd={() => {
+                  console.log("🎬 Stream load ended");
+                  setStreamLoading(false);
+                }}
+                onHttpError={(syntheticEvent) => {
+                  const { nativeEvent } = syntheticEvent;
+                  console.error('HTTP Error:', nativeEvent.statusCode);
+                  if (nativeEvent.statusCode >= 400) {
+                    setStreamError(true);
+                    setStreamLoading(false);
+                  }
+                }}
+                // Tambahan props untuk memastikan loading hilang
+                onMessage={() => {
+                  setStreamLoading(false);
+                }}
+                onContentProcessDidTerminate={() => {
+                  console.log("⚠️ Content process terminated");
+                  setStreamLoading(false);
+                }}
+                mediaPlaybackRequiresUserAction={false}
+                allowsInlineMediaPlayback={true}
+                javaScriptEnabled={true}
+                domStorageEnabled={true}
+                scalesPageToFit={true}
+                scrollEnabled={false}
+              />
+            </>
           ) : cameraImage ? (
             <Image
               source={{ uri: cameraImage }}
@@ -433,16 +470,27 @@ const IoTDashboard: React.FC = () => {
           ) : (
             <View style={styles.noImagePlaceholder}>
               <Icon name="camera-off" size={48} color="#94a3b8" />
-              <Text style={styles.noImageText}>No image available</Text>
+              <Text style={styles.noImageText}>No Stream Available</Text>
               <Text style={styles.noImageSubtext}>
-                {isStreaming ? "Starting stream..." : "Tap Stream for live video or Capture for snapshot"}
+                {isStreaming ? "Starting stream..." : "Tap Stream for live video"}
+              </Text>
+            </View>
+          )}
+          
+          {/* Error indicator */}
+          {streamError && isStreaming && (
+            <View style={styles.errorOverlay}>
+              <Icon name="alert-circle" size={48} color="#ef4444" />
+              <Text style={styles.errorText}>Stream connection failed</Text>
+              <Text style={styles.errorSubtext}>
+                Check ESP32-CAM IP: {esp32camIP}
               </Text>
             </View>
           )}
         </View>
         
         <View style={styles.cameraInfo}>
-          {isStreaming && (
+          {isStreaming && !streamError && (
             <View style={styles.streamingBadge}>
               <View style={styles.streamingDot} />
               <Text style={styles.streamingText}>LIVE STREAMING</Text>
@@ -638,7 +686,6 @@ const IoTDashboard: React.FC = () => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Edit Data Tanaman</Text>
             
-            {/* Input Nama */}
             <Text style={styles.inputLabel}>Nama Tanaman</Text>
             <TextInput
               style={styles.input}
@@ -646,7 +693,6 @@ const IoTDashboard: React.FC = () => {
               onChangeText={(text) => setEditingPlant({ ...editingPlant, name: text })}
             />
 
-            {/* Input Tanggal Tanam */}
             <Text style={styles.inputLabel}>Tanggal Tanam (YYYY-MM-DD)</Text>
             <TextInput
               style={[styles.input, !DATE_REGEX.test(editingPlant.plantingDate) && { borderColor: 'red' }]}
@@ -657,7 +703,6 @@ const IoTDashboard: React.FC = () => {
               maxLength={10}
             />
             
-            {/* Input Count */}
             <Text style={styles.inputLabel}>Jumlah Unit</Text>
             <TextInput
               style={styles.input}
@@ -666,7 +711,6 @@ const IoTDashboard: React.FC = () => {
               keyboardType="numeric"
             />
             
-            {/* Input PH Min */}
             <Text style={styles.inputLabel}>Standard PH Minimum</Text>
             <TextInput
               style={styles.input}
@@ -675,7 +719,6 @@ const IoTDashboard: React.FC = () => {
               keyboardType="numeric"
             />
             
-            {/* Input PH Max */}
             <Text style={styles.inputLabel}>Standard PH Maximum</Text>
             <TextInput
               style={styles.input}
